@@ -1,0 +1,9 @@
+[submodule "content"]
+	path = content
+	url = git@github.com:wikip-co/content.git
+[submodule "research-tools"]
+	path = research-tools
+	url = git@github.com:wikip-co/research-tools.git
+[submodule "wikip.co"]
+	path = wikip.co
+	url = git@github.com:wikip-co/wikip.co.git
