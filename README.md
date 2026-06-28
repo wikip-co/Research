@@ -227,6 +227,9 @@ scp naspi5:/mnt/raid5/content-agent-backups/gmail-reader/scholar-alerts-latest.d
 
 Use a single active writer for the SQLite database. A local primary DB plus scheduled NAS backup is safer than multiple machines writing to the same SQLite file.
 
+The proposed PostgreSQL architecture and migration sequence are documented in
+[`docs/database-architecture-and-migration.md`](docs/database-architecture-and-migration.md).
+
 ## Research Style Guide
 
 The agent publishing style guide lives at:
