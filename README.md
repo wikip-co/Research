@@ -89,7 +89,7 @@ If you intentionally want newer child repo commits pinned by the workspace, upda
 
 - `gmail-reader`: reads Google Scholar alert emails via `gws`, parses article candidates, and stores them in SQLite.
 - `wiki-automation`: searches and matches existing markdown, builds queues, runs intake, appends research, archives sources, and opens/publishes content PRs.
-- `web-scraper`: scrapes article URLs and PDFs into structured JSON/markdown packets, with optional browser fallback.
+- `web-scraper`: scrapes article URLs and PDFs into structured JSON/markdown packets, with FlareSolverr (Cloudflare) and optional browser fallback. Full text preferred; abstract-only is acceptable for paywalls.
 - `image-upload`: uploads article images or captured screenshots to Cloudinary.
 - `content-agent-core`: shared runtime helpers.
 
