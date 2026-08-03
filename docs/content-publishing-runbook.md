@@ -11,6 +11,10 @@ This workspace-level runbook documents the path from research ingestion to the l
 
 Each is a standalone repository. No repository records another as a submodule.
 
+![Exact-SHA content publishing pipeline](diagrams/rendered/cicd-exact-sha-publishing.svg)
+
+The [architecture diagram gallery](diagrams/README.md) also covers the upstream research workflow and each repository's internal boundary.
+
 ## End-to-end flow
 
 1. An agent or human changes markdown in `content` and opens a PR there.

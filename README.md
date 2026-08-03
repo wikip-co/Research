@@ -5,6 +5,7 @@ This repository is a thin workspace wrapper around the project repos used to dis
 **Operators / Hermes handoff:** see [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for current host layout (iconium), managed checkout state, recent cross-repo changes, and a pickup checklist. Tool-level detail lives in the [`research-tools` release notes](https://github.com/wikip-co/research-tools/blob/main/RELEASE_NOTES.md).
 
 Cross-repository runbooks and agent guidelines are indexed in [`docs/README.md`](docs/README.md).
+The complete visual system map and per-repository architecture gallery is in [`docs/diagrams/README.md`](docs/diagrams/README.md).
 
 ## Project Map
 
@@ -23,6 +24,10 @@ Gmail / Google Scholar alerts
   -> wikip.co Hexo build
   -> wikip-co/public / Cloudflare Pages
 ```
+
+![Research project repository ecosystem](docs/diagrams/rendered/project-repository-ecosystem.svg)
+
+See the [ideal end-to-end workflow](docs/diagrams/rendered/ideal-end-to-end-research-workflow.svg) and the [complete diagram gallery](docs/diagrams/README.md) for the local build-fetch model, exact-SHA CI/CD, `iconium` runtime, and individual repository internals.
 
 ## Repository Layout
 

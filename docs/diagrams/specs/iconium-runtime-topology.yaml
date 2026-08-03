@@ -1,0 +1,158 @@
+title: Iconium Research Runtime and Data Topology
+direction: LR
+graph_attr:
+  ranksep: "1.1"
+  nodesep: "0.6"
+  pad: "0.5"
+clusters:
+  - id: external
+    label: External systems
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#64748b"
+  - id: iconium
+    label: "iconium (10.32.25.177)"
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: storage
+    label: Local and backup data
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: lan_user
+    label: "Trusted LAN browser\niconium.lan:8765"
+    icon: ibm.user.Browser
+    cluster: external
+  - id: gmail
+    label: "Gmail / Scholar\nalert messages"
+    icon: oci.monitoring.Email
+    cluster: external
+  - id: publishers
+    label: "Publisher pages\nHTML and PDFs"
+    icon: onprem.network.Internet
+    cluster: external
+  - id: vault
+    label: "Vault\nGoogle and Cloudinary secrets"
+    icon: onprem.security.Vault
+    cluster: external
+  - id: github
+    label: "GitHub\ncontent branches and PRs"
+    icon: onprem.vcs.Github
+    cluster: external
+  - id: cloudinary
+    label: "Cloudinary\narticle media"
+    icon: saas.media.Cloudinary
+    cluster: external
+  - id: service
+    label: "research-triage-ui.service\nsystemd user service"
+    icon: generic.os.LinuxGeneral
+    cluster: iconium
+    status: healthy
+  - id: web
+    label: "gmail-reader-web\n0.0.0.0:8765"
+    icon: programming.language.Python
+    cluster: iconium
+    status: healthy
+  - id: codex
+    label: "Background Codex jobs\nprocess selected rows"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: workflow
+    label: "agent-workflow\norchestrator"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: scraper
+    label: "web-scraper\nretrieval fallbacks"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: flaresolverr
+    label: "FlareSolverr API\n127.0.0.1:8191"
+    icon: onprem.container.Docker
+    cluster: iconium
+    attrs:
+      color: "#b45309"
+      fontcolor: "#b45309"
+  - id: image_upload
+    label: "image-upload\nmedia integration"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: wiki
+    label: "wiki-automation\nmatch, author, publish PR"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: sqlite
+    label: "scholar-alerts.db\nactive SQLite primary"
+    icon: generic.database.SQL
+    cluster: storage
+  - id: content_checkout
+    label: "content/.git\nstandalone working repository"
+    icon: onprem.vcs.Git
+    cluster: storage
+  - id: timer
+    label: "research-db-backup.timer\nnightly around 03:30"
+    icon: generic.os.LinuxGeneral
+    cluster: storage
+    status: healthy
+  - id: nas
+    label: "NAS backup target\n/mnt/naspi5/.../gmail-reader"
+    icon: generic.storage.Storage
+    cluster: storage
+edges:
+  - from: lan_user
+    to: service
+    label: triage and launch jobs
+  - from: service
+    to: web
+    label: starts
+  - from: web
+    to: sqlite
+    label: reads and writes
+  - from: web
+    to: codex
+    label: background job
+  - from: codex
+    to: workflow
+    label: invokes
+  - from: gmail
+    to: workflow
+    label: gws queries
+  - from: workflow
+    to: sqlite
+    label: lifecycle state
+  - from: workflow
+    to: scraper
+    label: selected source
+  - from: publishers
+    to: scraper
+    label: retrieve
+  - from: scraper
+    to: flaresolverr
+    label: blocked HTML fallback
+    style: dashed
+  - from: vault
+    to: workflow
+    label: runtime credentials
+  - from: workflow
+    to: image_upload
+    label: new article media
+    style: dashed
+  - from: image_upload
+    to: cloudinary
+    label: upload/search
+  - from: workflow
+    to: wiki
+    label: packet and action
+  - from: wiki
+    to: content_checkout
+    label: Markdown changes
+  - from: wiki
+    to: github
+    label: branch, push, PR
+  - from: timer
+    to: sqlite
+    label: SQLite-safe backup
+  - from: timer
+    to: nas
+    label: timestamped + latest

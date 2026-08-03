@@ -1,0 +1,104 @@
+title: Research Project Repository Ecosystem
+direction: LR
+graph_attr:
+  ranksep: "1.15"
+  nodesep: "0.65"
+  pad: "0.5"
+clusters:
+  - id: coordination
+    label: Workspace coordination
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#64748b"
+  - id: source
+    label: Independently versioned project repositories
+    graph_attr:
+      bgcolor: "#f0f9ff"
+      color: "#0369a1"
+  - id: delivery
+    label: Delivery services and artifacts
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: research
+    label: "wikip-co/Research\nmanifest, docs, agent guidance"
+    icon: onprem.vcs.Github
+    cluster: coordination
+  - id: workspace
+    label: "./workspace\nclone, sync, status, verify"
+    icon: onprem.vcs.Git
+    cluster: coordination
+  - id: research_tools
+    label: "wikip-co/research-tools\nintake and authoring toolchain"
+    icon: programming.language.Python
+    cluster: source
+  - id: content
+    label: "wikip-co/content\n3,206 Markdown source files"
+    icon: onprem.vcs.Github
+    cluster: source
+  - id: site
+    label: "wikip-co/wikip.co\nHexo app and build orchestration"
+    icon: programming.language.NodeJS
+    cluster: source
+  - id: public
+    label: "wikip-co/public\n4,466 generated site files"
+    icon: onprem.vcs.Github
+    cluster: source
+  - id: scholar
+    label: "Gmail and Google Scholar\nresearch alerts"
+    icon: oci.monitoring.Email
+    cluster: delivery
+  - id: cloudinary
+    label: "Cloudinary\narticle media"
+    icon: saas.media.Cloudinary
+    cluster: delivery
+  - id: actions
+    label: "GitHub Actions\nexact-SHA build pipeline"
+    icon: onprem.ci.GithubActions
+    cluster: delivery
+  - id: pages
+    label: "Cloudflare Pages\nwikip.co"
+    icon: saas.cdn.Cloudflare
+    cluster: delivery
+  - id: dockerhub
+    label: "Docker Hub\nanthonyrussano/wikip.co"
+    icon: onprem.container.Docker
+    cluster: delivery
+edges:
+  - from: research
+    to: workspace
+    label: declares repositories
+  - from: workspace
+    to: research_tools
+    label: standalone checkout
+  - from: workspace
+    to: content
+    label: standalone checkout
+  - from: workspace
+    to: site
+    label: standalone checkout
+  - from: scholar
+    to: research_tools
+    label: discovers papers
+  - from: research_tools
+    to: content
+    label: draft content PR
+  - from: research_tools
+    to: cloudinary
+    label: uploads media
+  - from: content
+    to: actions
+    label: dispatches content SHA
+  - from: site
+    to: actions
+    label: owns build workflow
+  - from: actions
+    to: public
+    label: commits generated output
+  - from: public
+    to: pages
+    label: deploy source
+  - from: actions
+    to: dockerhub
+    label: pushes multi-arch image

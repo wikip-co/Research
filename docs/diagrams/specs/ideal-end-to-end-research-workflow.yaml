@@ -1,0 +1,151 @@
+title: Ideal Research-to-Publication Workflow
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: discover
+    label: 1. Discover and curate
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: evaluate
+    label: 2. Retrieve and evaluate
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: author
+    label: 3. Author source content
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#ea580c"
+  - id: review
+    label: 4. Review and merge
+    graph_attr:
+      bgcolor: "#fefce8"
+      color: "#ca8a04"
+  - id: deliver
+    label: 5. Build and deliver
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#16a34a"
+nodes:
+  - id: alerts
+    label: "Scholar alerts\nand targeted Gmail search"
+    icon: oci.monitoring.Email
+    cluster: discover
+  - id: intake_db
+    label: "SQLite intake index\nmessages, articles, papers"
+    icon: generic.database.SQL
+    cluster: discover
+  - id: curate
+    label: "Human or agent curation\nselected / review / rejected"
+    icon: onprem.client.User
+    cluster: discover
+  - id: scrape
+    label: "Retrieve full text or abstract\nURL / HTML / PDF"
+    icon: programming.language.Python
+    cluster: evaluate
+  - id: evidence
+    label: "Assess relevance and limits\narchive source provenance"
+    icon: generic.storage.Storage
+    cluster: evaluate
+  - id: match
+    label: "Search and match\nexisting content first"
+    icon: onprem.vcs.Git
+    cluster: evaluate
+  - id: update
+    label: "Append existing article\nor create new Markdown"
+    icon: onprem.vcs.Github
+    cluster: author
+  - id: image
+    label: "New article only\ncreate/upload media"
+    icon: saas.media.Cloudinary
+    cluster: author
+  - id: lint
+    label: "Apply style guides\nfrontmatter, citations, evidence"
+    icon: programming.language.Python
+    cluster: author
+  - id: draft_pr
+    label: "Draft PR in content\nbranch, commit, push"
+    icon: onprem.vcs.Github
+    cluster: review
+  - id: human_review
+    label: "Editorial review\naccuracy and presentation"
+    icon: onprem.client.User
+    cluster: review
+  - id: merge
+    label: "Merge content/main\nimmutable content SHA"
+    icon: onprem.vcs.Git
+    cluster: review
+  - id: dispatch
+    label: "repository_dispatch\nexact content_sha"
+    icon: onprem.ci.GithubActions
+    cluster: deliver
+  - id: build
+    label: "Prepare plain tree\nand build Hexo"
+    icon: programming.language.NodeJS
+    cluster: deliver
+  - id: publish
+    label: "Commit public/main\nand push Docker image"
+    icon: onprem.container.Docker
+    cluster: deliver
+  - id: live
+    label: "Cloudflare Pages\nserves wikip.co"
+    icon: saas.cdn.Cloudflare
+    cluster: deliver
+edges:
+  - from: alerts
+    to: intake_db
+    label: parse and score
+  - from: intake_db
+    to: curate
+    label: triage queue
+  - from: curate
+    to: scrape
+    label: selected candidate
+  - from: scrape
+    to: evidence
+    label: structured packet
+  - from: evidence
+    to: match
+    label: validated source
+  - from: match
+    to: update
+    label: update preferred
+  - from: update
+    to: image
+    label: if new
+    style: dashed
+  - from: update
+    to: lint
+    label: Markdown change
+  - from: image
+    to: lint
+    label: frontmatter image
+  - from: lint
+    to: draft_pr
+    label: ready for review
+  - from: draft_pr
+    to: human_review
+    label: review request
+  - from: human_review
+    to: update
+    label: requested edits
+    style: dashed
+  - from: human_review
+    to: merge
+    label: approved
+  - from: merge
+    to: dispatch
+    label: push main
+  - from: dispatch
+    to: build
+    label: exact SHA checkout
+  - from: build
+    to: publish
+    label: generated artifacts
+  - from: publish
+    to: live
+    label: deploy

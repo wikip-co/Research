@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+diagram_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+research_root="$(cd -- "${diagram_root}/../.." && pwd)"
+generator_root="${DIAGRAM_GENERATOR_ROOT:-${HOME}/diagram-generator}"
+generator_image="${DIAGRAM_GENERATOR_IMAGE:-diagram-gen:local}"
+spec_root="${diagram_root}/specs"
+render_root="${diagram_root}/rendered"
+
+if [[ ! -f "${generator_root}/pyproject.toml" ]]; then
+  printf 'diagram-generator not found: %s\n' "$generator_root" >&2
+  printf 'Set DIAGRAM_GENERATOR_ROOT to its checkout path.\n' >&2
+  exit 1
+fi
+
+mkdir -p "$render_root"
+
+render_spec() {
+  local spec="$1" name="$2" format="$3"
+
+  if command -v dot >/dev/null 2>&1; then
+    (
+      cd "$generator_root"
+      uv run --extra render diagram-gen spec \
+        --spec "$spec" \
+        --out-dir "$render_root" \
+        --output "$name" \
+        --format "$format"
+    )
+    return
+  fi
+
+  if ! command -v podman >/dev/null 2>&1; then
+    printf 'Neither Graphviz dot nor Podman is available for spec rendering.\n' >&2
+    exit 1
+  fi
+  if ! podman image exists "$generator_image"; then
+    printf 'Diagram generator image not found: %s\n' "$generator_image" >&2
+    printf 'Build it with: podman build --file %s/Containerfile --tag %s %s\n' \
+      "$generator_root" "$generator_image" "$generator_root" >&2
+    exit 1
+  fi
+
+  local relative_spec="${spec#${research_root}/}"
+  podman run --rm --userns=keep-id \
+    --volume "${research_root}:/workspace:Z" \
+    "$generator_image" spec \
+    --spec "/workspace/${relative_spec}" \
+    --out-dir /workspace/docs/diagrams/rendered \
+    --output "$name" \
+    --format "$format"
+}
+
+for spec in "$spec_root"/*.yaml; do
+  name="$(basename -- "$spec" .yaml)"
+  for format in svg png; do
+    printf 'Rendering %s.%s\n' "$name" "$format"
+    render_spec "$spec" "$name" "$format"
+  done
+done
+
+printf 'Rendered %s specs into %s\n' \
+  "$(find "$spec_root" -maxdepth 1 -name '*.yaml' | wc -l)" "$render_root"

@@ -1,0 +1,159 @@
+title: Research Tools Component and Dependency Architecture
+direction: LR
+graph_attr:
+  ranksep: "1.05"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: entrypoints
+    label: Operator and agent entrypoints
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#475569"
+  - id: packages
+    label: Python uv workspace packages
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: state
+    label: State and repository outputs
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: integrations
+    label: External dependencies
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: wrapper
+    label: "agent-workflow\nmanual orchestration CLI"
+    icon: programming.language.Python
+    cluster: entrypoints
+  - id: triage
+    label: "Triage web UI\ncurate rows and start jobs"
+    icon: ibm.user.Browser
+    cluster: entrypoints
+  - id: codex
+    label: "Codex job\nagent judgment and edits"
+    icon: programming.language.Python
+    cluster: entrypoints
+  - id: core
+    label: "content-agent-core\nenv, browser, HTTP helpers"
+    icon: programming.language.Python
+    cluster: packages
+  - id: gmail_reader
+    label: "gmail-reader\nparse, triage, paper lifecycle"
+    icon: programming.language.Python
+    cluster: packages
+  - id: scraper
+    label: "web-scraper\nHTML/PDF extraction and metadata"
+    icon: programming.language.Python
+    cluster: packages
+  - id: image
+    label: "image-upload\nasset search, capture, upload"
+    icon: programming.language.Python
+    cluster: packages
+  - id: wiki
+    label: "wiki-automation\nsearch, match, lint, archive, PR"
+    icon: programming.language.Python
+    cluster: packages
+  - id: sqlite
+    label: "SQLite intake database\nmessages, articles, papers, jobs"
+    icon: generic.database.SQL
+    cluster: state
+  - id: packets
+    label: "Ignored runtime packets\nscrapes and source archives"
+    icon: generic.storage.Storage
+    cluster: state
+  - id: content
+    label: "Standalone content repo\nMarkdown working tree"
+    icon: onprem.vcs.Git
+    cluster: state
+  - id: gmail
+    label: "gws + Gmail\nScholar alert access"
+    icon: oci.monitoring.Email
+    cluster: integrations
+  - id: web
+    label: "Publisher web\nCrossref, PubMed, Unpaywall"
+    icon: onprem.network.Internet
+    cluster: integrations
+  - id: flaresolverr
+    label: "FlareSolverr / browser\nretrieval fallbacks"
+    icon: onprem.container.Docker
+    cluster: integrations
+  - id: cloudinary
+    label: Cloudinary
+    icon: saas.media.Cloudinary
+    cluster: integrations
+  - id: vault
+    label: "Vault and .env\nruntime secrets"
+    icon: onprem.security.Vault
+    cluster: integrations
+  - id: github
+    label: "GitHub CLI/API\ncontent pull requests"
+    icon: onprem.vcs.Github
+    cluster: integrations
+edges:
+  - from: wrapper
+    to: gmail_reader
+    label: queue/backlog/triage-ui
+  - from: wrapper
+    to: scraper
+    label: intake and append
+  - from: wrapper
+    to: wiki
+    label: match, author, publish
+  - from: triage
+    to: sqlite
+    label: curate statuses
+  - from: triage
+    to: codex
+    label: launch selected job
+  - from: codex
+    to: wrapper
+    label: executes workflow
+  - from: core
+    to: scraper
+    label: shared helpers
+  - from: core
+    to: image
+    label: shared helpers
+  - from: core
+    to: wiki
+    label: shared helpers
+  - from: gmail
+    to: gmail_reader
+    label: JSON messages
+  - from: gmail_reader
+    to: sqlite
+    label: intake and lifecycle state
+  - from: scraper
+    to: web
+    label: fetch and enrich
+  - from: scraper
+    to: flaresolverr
+    label: blocked-page fallback
+    style: dashed
+  - from: scraper
+    to: packets
+    label: normalized packet
+  - from: wiki
+    to: packets
+    label: archive provenance
+  - from: wiki
+    to: content
+    label: search and edit Markdown
+  - from: wiki
+    to: image
+    label: optional new-article media
+    style: dashed
+  - from: image
+    to: cloudinary
+    label: asset operations
+  - from: vault
+    to: wrapper
+    label: credential bootstrap
+  - from: wiki
+    to: github
+    label: push branch and open PR
