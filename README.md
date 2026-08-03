@@ -2,6 +2,8 @@
 
 This repository is a thin workspace wrapper around the project repos used to discover research papers, turn them into wiki content, and publish the generated site.
 
+**Operators / Hermes handoff:** see [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for current host layout (iconium), submodule pins, recent cross-repo changes, and a pickup checklist. Tool-level detail lives in [`research-tools/RELEASE_NOTES.md`](./research-tools/RELEASE_NOTES.md).
+
 ## Project Map
 
 - `research-tools`: agent-facing tooling for research intake, Gmail/Google Scholar alert parsing, scraping, article matching, image upload, source archiving, and content PR creation.
