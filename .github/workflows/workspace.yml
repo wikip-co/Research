@@ -1,0 +1,32 @@
+name: Validate Workspace
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Validate workspace manifest and helper
+        run: |
+          bash -n workspace scripts/migrate-legacy-submodules
+          ./workspace validate
+
+      - name: Enforce flat repository boundaries
+        run: |
+          if git ls-files --stage | awk '$1 == "160000" { found = 1 } END { exit !found }'; then
+            echo "Gitlinks are not allowed; declare repositories in workspace-repos.tsv."
+            exit 1
+          fi
+          if git ls-files | grep -qE '(^|/)\.gitmodules$'; then
+            echo ".gitmodules files are not allowed in the coordinator."
+            exit 1
+          fi

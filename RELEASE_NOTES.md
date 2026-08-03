@@ -1,7 +1,7 @@
 # Research workspace — release notes & handoff
 
-Living notes for the **superproject** at `~/Research` (`wikip-co/Research`).  
-Covers cross-repo / host-level changes and points into submodule-specific notes.
+Living notes for the flat workspace coordinator at `~/Research` (`wikip-co/Research`).
+Covers cross-repo / host-level changes and points into repository-specific notes.
 
 If you are a Hermes (or human) picking up this stack: **start here**, then open the linked child notes before changing production behavior.
 
@@ -9,7 +9,7 @@ If you are a Hermes (or human) picking up this stack: **start here**, then open 
 |---|---|
 | **Primary runtime host** | `iconium` (`10.32.25.177` / `iconium.lan`) |
 | **Workspace path** | `~/Research` |
-| **GitHub superproject** | `wikip-co/Research` · branch `main` |
+| **GitHub coordinator** | `wikip-co/Research` · branch `main` |
 | **Triage UI** | http://iconium.lan:8765 |
 | **Not primary** | ser9 research services were cut over ~Aug 2026; do not revive without explicit direction |
 
@@ -21,12 +21,12 @@ If you are a Hermes (or human) picking up this stack: **start here**, then open 
 |------|------|------|
 | `research-tools/` | `wikip-co/research-tools` | Intake, SQLite DB, triage UI, scraper, wiki-automation, agent-workflow |
 | `content/` | `wikip-co/content` | Markdown source of truth for wiki articles |
-| `wikip.co/` | `wikip-co/wikip.co` | Hexo site build + publish (nested: `_posts` → content, `public` → static) |
-| `docs/` | (in this repo) | Cross-cutting workspace docs (e.g. DB architecture plan) |
-| `README.md` | (this repo) | Clone/sync, submodule rules, flow overview |
+| `wikip.co/` | `wikip-co/wikip.co` | Hexo site build + build-time content/public fetch |
+| `docs/` | (in this repo) | Cross-cutting runbooks, architecture, and agent guidelines |
+| `README.md` | (this repo) | Clone/sync, repository boundaries, flow overview |
 
-**Detail for tools/runtime:** [`research-tools/RELEASE_NOTES.md`](./research-tools/RELEASE_NOTES.md)  
-**Workspace orientation:** [`README.md`](./README.md)  
+**Detail for tools/runtime:** [`wikip-co/research-tools` release notes](https://github.com/wikip-co/research-tools/blob/main/RELEASE_NOTES.md)
+**Workspace orientation:** [`README.md`](./README.md)
 **DB migration notes:** [`docs/database-architecture-and-migration.md`](./docs/database-architecture-and-migration.md)
 
 ### Pipeline (reminder)
@@ -43,32 +43,40 @@ Gmail / Google Scholar alerts
 
 ---
 
-## Pinned submodule commits (workspace `main`)
+## Managed repositories
 
-Update this table whenever you intentionally bump workspace pins.
+`workspace-repos.tsv` records repository names and default branches, not commit pointers. `./workspace sync` clones missing repositories and fast-forwards clean checkouts that are already on their declared branch.
 
-| Submodule | Pin (short) | Notes |
-|-----------|-------------|--------|
-| `research-tools` | `3c6cab4` | Tools handoff notes, dotenv/managed-clone fix, safer DB backup, Flare/PDF scrape work |
-| `content` | `8be79c2` | Unchanged in this handoff snapshot |
-| `wikip.co` | `c0972dd` | Unchanged in this handoff snapshot |
-
-Check live pins:
+Check live state:
 
 ```bash
 cd ~/Research
-git submodule status
-# leading "+" means checked-out submodule commit differs from the pin recorded by this repo
+./workspace status
 ```
 
-**Rule:** day-to-day commits go in the **child** repo. Bump and commit the superproject pointer only when you want new clones / iconium workspace to track that child HEAD.
+**Rule:** day-to-day commits go in the repository that owns the files. Research never records child commit pointers.
+
+### One-time migration for existing hosts
+
+Existing submodule worktrees keep pointing into `Research/.git/modules` until they are explicitly detached. `./workspace sync` intentionally does not perform this structural migration.
+
+After the flat-layout changes are available on the host:
+
+```bash
+cd ~/Research
+./workspace migrate --check
+./workspace migrate
+./workspace verify-layout
+```
+
+The migration preserves dirty state in the three top-level repositories and refuses to detach the former nested site repositories unless they are clean and fully pushed. It stores recoverable legacy metadata under `.git/legacy-submodule-backups/`.
 
 ---
 
 ## Host production layout (iconium)
 
 ```
-~/Research/                          # this superproject
+~/Research/                          # flat coordinator + standalone checkouts
 ~/Research/research-tools/           # tools + UI + agent-workflow
 ~/Research/research-tools/.env       # host secrets/paths (never commit)
 ~/Research/research-tools/gmail-reader/data/scholar-alerts.db
@@ -95,7 +103,13 @@ DB backups:    /mnt/naspi5/content-agent-backups/gmail-reader/
 
 ### 2026-08-03 — operator handoff
 
-- **Superproject:** this `RELEASE_NOTES.md`; pin `research-tools` → `3c6cab4`.
+- **Workspace migration:** replace top-level and nested submodules with manifest-driven standalone checkouts and build-time site inputs.
+- **Existing-host migration:** add `./workspace migrate` and `verify-layout`; the current workstation was detached successfully without changing any in-progress repository state.
+- **Site CI:** `wikip.co` owns its build/deploy workflow and fetches exact content plus generated-output repositories explicitly.
+- **Content CI:** `content` dispatches only to `wikip.co`; `anthonyrussano.com` is now independent.
+- **Agent guidance:** move the Natural Healing content style guide out of publishable content and into `Research/docs/`.
+- **Documentation:** centralize the site publishing runbook and architecture diagrams in `Research/docs/`.
+- **Prior coordinator snapshot:** `research-tools` was last recorded at `3c6cab4` before gitlinks were removed.
 - **research-tools `3c6cab4`:** child `RELEASE_NOTES.md` + README pointer (tool-level detail).
 - **research-tools `9d794a8`:** safer live SQLite backup (`sqlite3 .backup`, integrity check, retention).
 - **research-tools `b9fd730`:** `agent-workflow` dotenv only fills **unset** vars; tests isolate `CONTENT_REPO_ROOT` so production `.env` no longer breaks managed-clone tests.
@@ -110,7 +124,7 @@ DB backups:    /mnt/naspi5/content-agent-backups/gmail-reader/
 
 ### `content` / `wikip.co`
 
-No operator-critical pin moves in this handoff window. Recent `content` work is normal article/guide PRs; `wikip.co` has deploy/CI diagram docs. Bump pins when you intentionally ship those into the workspace snapshot.
+`content` remains the markdown source and dispatches its exact SHA. `wikip.co` fetches it at build time and publishes generated output through a separate temporary checkout of `wikip-co/public`.
 
 ---
 
@@ -128,15 +142,9 @@ curl -sS -m 3 http://127.0.0.1:8191/v1 \
 
 ## Pickup checklist (new Hermes / operator)
 
-1. `cd ~/Research && git status -sb && git pull --ff-only`
-2. Read **this file**, then [`research-tools/RELEASE_NOTES.md`](./research-tools/RELEASE_NOTES.md)
-3. Align tools checkout with intent:
-   ```bash
-   # either: match workspace pin
-   git submodule update --init --recursive
-   # or: track tools main explicitly (then bump pin when stable)
-   cd research-tools && git pull --ff-only origin main
-   ```
+1. `cd ~/Research && git status -sb && git pull --ff-only && ./workspace sync`
+2. Read **this file**, then the [`research-tools` release notes](https://github.com/wikip-co/research-tools/blob/main/RELEASE_NOTES.md)
+3. Run `./workspace verify-layout`. If it fails on legacy gitfiles, run `./workspace migrate --check` and then `./workspace migrate`.
 4. Confirm services:  
    `systemctl --user status research-triage-ui research-db-backup.timer`
 5. Confirm mounts: `mountpoint /mnt/naspi5 /mnt/data1`
@@ -149,16 +157,18 @@ curl -sS -m 3 http://127.0.0.1:8191/v1 \
 
 | Do | Don’t |
 |----|--------|
-| Commit tools/content/site changes in the **child** repo | Leave production on uncommitted scp overlays |
-| Update this file when host topology or pins change | Set empty/wrong `CONTENT_REPO_ROOT` to “fix” tests |
+| Commit tools/content/site changes in the owning repo | Leave production on uncommitted scp overlays |
+| Update this file when host topology or repository membership changes | Set empty/wrong `CONTENT_REPO_ROOT` to “fix” tests |
 | Keep secrets in host `.env` / Vault | Commit `.env` or tokens into any repo |
 | Use iconium as research primary | Assume ser9 still runs production research services |
 
 ---
 
-## Changelog (superproject)
+## Changelog (coordinator)
 
 ### 2026-08-03
+- Replace submodule gitlinks with `workspace-repos.tsv` and `./workspace`
+- Add an explicit, status-preserving migration for existing `.git/modules` workspaces
 - Add workspace-level `RELEASE_NOTES.md` for multi-submodule handoff
 - Bump `research-tools` submodule pin to `3c6cab4`
 - Point root `README.md` at this file
@@ -168,4 +178,4 @@ curl -sS -m 3 http://127.0.0.1:8191/v1 \
 
 ---
 
-*When you change submodule pins, host cutover, or anything another agent needs across repos, append here first — then deeper detail in the child `RELEASE_NOTES` if the change is tools-only.*
+*When you change repository membership, host cutover, or anything another agent needs across repos, append here first — then add deeper detail in the owning repository when appropriate.*

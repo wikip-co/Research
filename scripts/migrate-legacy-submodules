@@ -1,0 +1,275 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+coordinator_git_dir="$(git -C "$workspace_root" rev-parse --absolute-git-dir)"
+legacy_modules_root="${coordinator_git_dir}/modules"
+backup_root="${RESEARCH_GITDIR_BACKUP_ROOT:-${coordinator_git_dir}/legacy-submodule-backups/$(date -u +%Y%m%dT%H%M%SZ)-$$}"
+mode="${1:-migrate}"
+
+if [[ "$mode" != migrate && "$mode" != --check ]]; then
+  printf 'Usage: %s [--check]\n' "${0##*/}" >&2
+  exit 2
+fi
+
+top_paths=(content research-tools wikip.co)
+top_repositories=(wikip-co/content wikip-co/research-tools wikip-co/wikip.co)
+nested_paths=(wikip.co/public wikip.co/site/source/_posts)
+nested_repositories=(wikip-co/public wikip-co/content)
+
+declare -A top_gitdirs=()
+declare -A top_worktrees=()
+declare -A top_heads=()
+declare -A top_branches=()
+declare -A top_statuses=()
+declare -A top_moved=()
+declare -A nested_rel_gitdirs=()
+declare -A nested_detached=()
+
+migration_complete=0
+migration_started=0
+
+fail() {
+  printf 'Migration refused: %s\n' "$*" >&2
+  if [[ "$migration_started" == 1 ]]; then
+    rollback 1
+  fi
+  exit 1
+}
+
+expected_origin() {
+  local actual="$1" repository="$2"
+  [[ "$actual" == "git@github.com:${repository}.git" ||
+     "$actual" == "https://github.com/${repository}.git" ]]
+}
+
+status_fingerprint() {
+  git -C "$1" status --porcelain=v1 -z --untracked-files=all | sha256sum | awk '{print $1}'
+}
+
+backup_gitfile_path() {
+  printf '%s/gitfiles/%s.gitfile\n' "$backup_root" "$1"
+}
+
+backup_gitdir_path() {
+  printf '%s/gitdirs/%s\n' "$backup_root" "$1"
+}
+
+rollback() {
+  local exit_code="${1:-$?}"
+  [[ "$migration_complete" == 1 ]] && return "$exit_code"
+
+  trap - ERR
+  printf 'Migration failed; restoring the original gitdir layout.\n' >&2
+  set +e
+
+  local path source target old_gitdir gitfile_backup
+  for path in "${nested_paths[@]}"; do
+    source="$(backup_gitdir_path "$path")"
+    target="${workspace_root}/wikip.co/.git/${nested_rel_gitdirs[$path]:-}"
+    if [[ -n "${nested_rel_gitdirs[$path]:-}" && -d "$source" && ! -e "$target" ]]; then
+      mkdir -p "$(dirname -- "$target")"
+      mv "$source" "$target"
+    fi
+  done
+
+  for ((index=${#top_paths[@]}-1; index>=0; index--)); do
+    path="${top_paths[$index]}"
+    old_gitdir="${top_gitdirs[$path]:-}"
+    gitfile_backup="$(backup_gitfile_path "$path")"
+    if [[ "${top_moved[$path]:-0}" == 1 && -d "${workspace_root}/${path}/.git" && ! -e "$old_gitdir" ]]; then
+      mkdir -p "$(dirname -- "$old_gitdir")"
+      mv "${workspace_root}/${path}/.git" "$old_gitdir"
+      git --git-dir="$old_gitdir" config core.worktree "${top_worktrees[$path]}"
+    fi
+    if [[ -f "$gitfile_backup" && ! -e "${workspace_root}/${path}/.git" ]]; then
+      mv "$gitfile_backup" "${workspace_root}/${path}/.git"
+    fi
+  done
+
+  for path in "${nested_paths[@]}"; do
+    gitfile_backup="$(backup_gitfile_path "$path")"
+    if [[ -f "$gitfile_backup" && ! -e "${workspace_root}/${path}/.git" ]]; then
+      mkdir -p "${workspace_root}/${path}"
+      mv "$gitfile_backup" "${workspace_root}/${path}/.git"
+    fi
+  done
+
+  exit "$exit_code"
+}
+
+trap 'rollback $?' ERR
+
+if git -C "$workspace_root" ls-files --stage | awk '$1 == "160000" { found = 1 } END { exit !found }'; then
+  fail 'Research still records gitlinks; remove them before detaching legacy storage.'
+fi
+if git -C "${workspace_root}/wikip.co" ls-files --stage | awk '$1 == "160000" { found = 1 } END { exit !found }'; then
+  fail 'wikip.co still records gitlinks; remove them before detaching legacy storage.'
+fi
+[[ ! -e "${workspace_root}/wikip.co/.gitmodules" ]] ||
+  fail 'wikip.co/.gitmodules still exists'
+for ignored_path in public site/source/_posts; do
+  git -C "${workspace_root}/wikip.co" check-ignore -q "$ignored_path" ||
+    fail "wikip.co/$ignored_path must be ignored before migration"
+done
+
+printf 'Preflighting top-level repositories...\n'
+for index in "${!top_paths[@]}"; do
+  path="${top_paths[$index]}"
+  repository="${top_repositories[$index]}"
+  checkout="${workspace_root}/${path}"
+
+  [[ -d "$checkout" ]] || fail "missing checkout: $checkout"
+  git -C "$checkout" rev-parse --is-inside-work-tree >/dev/null 2>&1 ||
+    fail "$path is not a Git working tree"
+
+  origin="$(git -C "$checkout" remote get-url origin 2>/dev/null || true)"
+  expected_origin "$origin" "$repository" ||
+    fail "$path origin is '${origin:-missing}', expected $repository"
+
+  gitdir="$(git -C "$checkout" rev-parse --absolute-git-dir)"
+  top_gitdirs[$path]="$gitdir"
+  top_worktrees[$path]="$(git -C "$checkout" config --local --get core.worktree || true)"
+  top_heads[$path]="$(git -C "$checkout" rev-parse HEAD)"
+  top_branches[$path]="$(git -C "$checkout" symbolic-ref --quiet --short HEAD || true)"
+  top_statuses[$path]="$(status_fingerprint "$checkout")"
+
+  if [[ "$gitdir" == "$checkout/.git" && -d "$checkout/.git" ]]; then
+    printf '  %s is already standalone.\n' "$path"
+    top_moved[$path]=0
+    continue
+  fi
+
+  [[ -f "$checkout/.git" ]] || fail "$path has an unsupported .git layout"
+  [[ "$gitdir" == "${legacy_modules_root}/${path}" ]] ||
+    fail "$path gitdir is outside the expected legacy module path: $gitdir"
+  top_moved[$path]=1
+  printf '  %s will move %s -> %s/.git\n' "$path" "$gitdir" "$checkout"
+done
+
+printf 'Preflighting former nested site repositories...\n'
+for index in "${!nested_paths[@]}"; do
+  path="${nested_paths[$index]}"
+  repository="${nested_repositories[$index]}"
+  checkout="${workspace_root}/${path}"
+
+  if [[ ! -e "$checkout/.git" ]]; then
+    printf '  %s is already plain build material.\n' "$path"
+    nested_detached[$path]=0
+    continue
+  fi
+
+  [[ -f "$checkout/.git" ]] || fail "$path contains a standalone .git directory"
+  [[ -z "$(git -C "$checkout" status --porcelain)" ]] ||
+    fail "$path has local changes"
+
+  origin="$(git -C "$checkout" remote get-url origin 2>/dev/null || true)"
+  expected_origin "$origin" "$repository" ||
+    fail "$path origin is '${origin:-missing}', expected $repository"
+
+  if ! git -C "$checkout" branch --remotes --contains HEAD | grep -qE '(^|[[:space:]])origin/'; then
+    fail "$path HEAD is not contained in an origin remote branch"
+  fi
+  [[ -z "$(git -C "$checkout" rev-parse --verify refs/stash 2>/dev/null || true)" ]] ||
+    fail "$path has stashed changes"
+
+  while IFS=$'\t' read -r branch upstream; do
+    [[ -n "$branch" ]] || continue
+    [[ -n "$upstream" ]] || fail "$path branch $branch has no upstream"
+    ahead="$(git -C "$checkout" rev-list --count "${upstream}..${branch}")"
+    [[ "$ahead" == 0 ]] || fail "$path branch $branch has $ahead unpushed commit(s)"
+  done < <(git -C "$checkout" for-each-ref \
+    --format='%(refname:short)%09%(upstream:short)' refs/heads)
+
+  gitdir="$(git -C "$checkout" rev-parse --absolute-git-dir)"
+  old_wikip_gitdir="${top_gitdirs[wikip.co]}"
+  [[ "$gitdir" == "$old_wikip_gitdir"/modules/* ]] ||
+    fail "$path gitdir is outside wikip.co's legacy module storage: $gitdir"
+  nested_rel_gitdirs[$path]="${gitdir#${old_wikip_gitdir}/}"
+  nested_detached[$path]=1
+  printf '  %s is clean and fully pushed; it will become plain build material.\n' "$path"
+done
+
+needs_migration=0
+for path in "${top_paths[@]}"; do
+  [[ "${top_moved[$path]}" == 1 ]] && needs_migration=1
+done
+for path in "${nested_paths[@]}"; do
+  [[ "${nested_detached[$path]}" == 1 ]] && needs_migration=1
+done
+
+if [[ "$needs_migration" == 0 ]]; then
+  migration_complete=1
+  trap - ERR
+  printf 'All workspace repositories already use the flat gitdir layout.\n'
+  exit 0
+fi
+
+if [[ "$mode" == --check ]]; then
+  migration_complete=1
+  trap - ERR
+  printf 'Preflight passed; legacy Git metadata is safe to migrate.\n'
+  exit 0
+fi
+
+migration_started=1
+mkdir -p "$backup_root/gitfiles" "$backup_root/gitdirs"
+printf 'Legacy submodule migration backup\nworkspace=%s\ncreated=%s\n' \
+  "$workspace_root" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" > "$backup_root/README.txt"
+
+for path in "${nested_paths[@]}"; do
+  [[ "${nested_detached[$path]}" == 1 ]] || continue
+  backup="$(backup_gitfile_path "$path")"
+  mkdir -p "$(dirname -- "$backup")"
+  mv "${workspace_root}/${path}/.git" "$backup"
+  printf '%s\t%s\n' "${workspace_root}/${path}/.git" "$backup" >> "$backup_root/MOVED_PATHS.tsv"
+done
+
+for path in "${top_paths[@]}"; do
+  [[ "${top_moved[$path]}" == 1 ]] || continue
+  checkout="${workspace_root}/${path}"
+  old_gitdir="${top_gitdirs[$path]}"
+  gitfile_backup="$(backup_gitfile_path "$path")"
+  mkdir -p "$(dirname -- "$gitfile_backup")"
+  mv "$checkout/.git" "$gitfile_backup"
+  mv "$old_gitdir" "$checkout/.git"
+  git config --file "$checkout/.git/config" --unset-all core.worktree || true
+  printf '%s\t%s\n' "$old_gitdir" "$checkout/.git" >> "$backup_root/MOVED_PATHS.tsv"
+done
+
+for path in "${nested_paths[@]}"; do
+  [[ "${nested_detached[$path]}" == 1 ]] || continue
+  source="${workspace_root}/wikip.co/.git/${nested_rel_gitdirs[$path]}"
+  backup="$(backup_gitdir_path "$path")"
+  [[ -d "$source" ]] || fail "relocated legacy gitdir not found: $source"
+  mkdir -p "$(dirname -- "$backup")"
+  mv "$source" "$backup"
+  printf '%s\t%s\n' "$source" "$backup" >> "$backup_root/MOVED_PATHS.tsv"
+done
+
+for path in "${top_paths[@]}"; do
+  checkout="${workspace_root}/${path}"
+  [[ "$(git -C "$checkout" rev-parse --absolute-git-dir)" == "$checkout/.git" ]] ||
+    fail "$path did not resolve to its own .git directory"
+  [[ "$(git -C "$checkout" rev-parse HEAD)" == "${top_heads[$path]}" ]] ||
+    fail "$path HEAD changed during migration"
+  [[ "$(git -C "$checkout" symbolic-ref --quiet --short HEAD || true)" == "${top_branches[$path]}" ]] ||
+    fail "$path branch changed during migration"
+  [[ "$(status_fingerprint "$checkout")" == "${top_statuses[$path]}" ]] ||
+    fail "$path working-tree state changed during migration"
+done
+
+for path in "${nested_paths[@]}"; do
+  [[ ! -e "${workspace_root}/${path}/.git" ]] ||
+    fail "$path still contains nested Git metadata"
+done
+
+git -C "${workspace_root}/wikip.co" config --remove-section submodule.public 2>/dev/null || true
+git -C "${workspace_root}/wikip.co" config --remove-section submodule.site/source/_posts 2>/dev/null || true
+
+migration_complete=1
+trap - ERR
+
+printf '\nMigration complete.\n'
+printf 'Recoverable legacy metadata backup: %s\n' "$backup_root"
+printf 'Verify with: ./workspace verify-layout\n'

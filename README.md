@@ -2,7 +2,9 @@
 
 This repository is a thin workspace wrapper around the project repos used to discover research papers, turn them into wiki content, and publish the generated site.
 
-**Operators / Hermes handoff:** see [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for current host layout (iconium), submodule pins, recent cross-repo changes, and a pickup checklist. Tool-level detail lives in [`research-tools/RELEASE_NOTES.md`](./research-tools/RELEASE_NOTES.md).
+**Operators / Hermes handoff:** see [`RELEASE_NOTES.md`](./RELEASE_NOTES.md) for current host layout (iconium), managed checkout state, recent cross-repo changes, and a pickup checklist. Tool-level detail lives in the [`research-tools` release notes](https://github.com/wikip-co/research-tools/blob/main/RELEASE_NOTES.md).
+
+Cross-repository runbooks and agent guidelines are indexed in [`docs/README.md`](docs/README.md).
 
 ## Project Map
 
@@ -24,66 +26,74 @@ Gmail / Google Scholar alerts
 
 ## Repository Layout
 
-The top-level repo is a Git superproject. It records pinned commits for these submodules:
+This repository is a flat coordinator. It tracks workspace documentation, the repository manifest, and the `./workspace` helper; it does not track child repositories or their revisions as Git submodules.
 
-- `content`: `git@github.com:wikip-co/content.git`
-- `research-tools`: `git@github.com:wikip-co/research-tools.git`
-- `wikip.co`: `git@github.com:wikip-co/wikip.co.git`
+`workspace-repos.tsv` declares the independently versioned repositories used here:
 
-`wikip.co` also has nested submodules:
+- `content`: `wikip-co/content`
+- `research-tools`: `wikip-co/research-tools`
+- `wikip.co`: `wikip-co/wikip.co`
 
-- `wikip.co/site/source/_posts`: `wikip-co/content`, used by Hexo as the markdown source.
-- `wikip.co/public`: `wikip-co/public`, used for generated static assets.
+The helper clones those repositories into the familiar top-level paths. Those paths are ignored by Research, so each child has an independent branch, index, and remote without creating gitlink changes in the coordinator repository.
 
-The workspace repo itself should stay small. Most code, content, branches, commits, and PRs belong in the child repos.
+The site repository follows the same boundary: CI fetches `content` and `public` explicitly at build time. `site/source/_posts` and `public` are ignored build inputs/outputs rather than tracked submodules.
 
-## Should This Use Submodules?
-
-Submodules are reasonable here because this workspace is mainly a reproducible checkout for agents and operators. A single clone can bring together the tools repo, the content repo, and the site repo at known commits.
-
-The tradeoff is operational overhead:
-
-- the workspace can look modified when a submodule is simply checked out at a newer commit
-- updating a child repo does not automatically update the workspace's pinned commit
-- submodule pointer conflicts can happen if multiple people update the workspace pins independently
-
-Recommended rule:
-
-- Keep this workspace repo for setup, reproducibility, and cross-repo orientation.
-- Do day-to-day development inside `research-tools`, `content`, or `wikip.co`.
-- Open PRs in the child repo that actually changed.
-- Update and commit the top-level submodule pointers only when you intentionally want future workspace clones to start from newer child-repo commits.
-
-Cloning each repo separately is also fine when you are actively working in only one repo and do not need the full workspace. For agent work, this workspace is still useful because it gives the agent the whole operating context.
+Research CI validates the manifest and rejects future gitlinks or `.gitmodules`; it does not clone child repositories.
 
 ## Clone And Sync
 
-Clone everything in one step:
+Clone the coordinator and fetch the working repositories:
 
 ```bash
-git clone --recursive <workspace-repo-url>
+git clone git@github.com:wikip-co/Research.git
+cd Research
+./workspace sync
 ```
 
-If the workspace was cloned without submodules:
+Use HTTPS instead of SSH when needed:
 
 ```bash
-git submodule update --init --recursive
+RESEARCH_GIT_PROTOCOL=https ./workspace sync
 ```
 
-Check current submodule state:
+Check all child repository states without affecting them:
 
 ```bash
-git submodule status --recursive
+./workspace status
 ```
 
-Pull the workspace repo and then reset submodules to the commits recorded by the workspace:
+`sync` clones missing repositories and fast-forwards a checkout only when it is clean and already on the manifest branch. It fetches but does not switch branches, detach HEAD, reset work, or overwrite local changes.
+
+To update the coordinator and working repositories:
 
 ```bash
-git pull
-git submodule update --init --recursive
+git pull --ff-only
+./workspace sync
 ```
 
-If you intentionally want newer child repo commits pinned by the workspace, update the child repo, return to this top-level repo, and commit the changed submodule pointer.
+## Migrating An Existing Submodule Workspace
+
+`workspace sync` does not silently rewrite Git storage for an existing checkout. After pulling the commits that remove the old gitlinks, explicitly detach the legacy layout once:
+
+```bash
+./workspace migrate --check
+./workspace migrate
+./workspace verify-layout
+```
+
+The migration performs a complete preflight before moving anything. It preserves each top-level repository's HEAD, branch, index, untracked files, and dirty state, then verifies that their status fingerprints are unchanged. The former `wikip.co/public` and `wikip.co/site/source/_posts` repositories must be clean, fully pushed, ignored by `wikip.co`, and free of stashes; they become plain build directories.
+
+Expected verification output:
+
+```text
+Standalone: research-tools
+Standalone: content
+Standalone: wikip.co
+Plain build directory: wikip.co/public
+Plain build directory: wikip.co/site/source/_posts
+```
+
+Legacy nested metadata is moved to a timestamped recovery backup under `.git/legacy-submodule-backups/`. Keep that backup until the site build and normal repository operations have been verified.
 
 ## Main Working Repo: `research-tools`
 
@@ -240,6 +250,12 @@ The agent publishing style guide lives at:
 research-tools/docs/research-publishing-style-guide.md
 ```
 
+Natural Healing articles also follow the workspace-level guide:
+
+```text
+docs/natural-healing-content-style-guide.md
+```
+
 It tells agents to:
 
 - write only to `content` markdown, not generated site output
@@ -272,7 +288,7 @@ Top-level workspace:
 
 ```bash
 git status --short
-git submodule status --recursive
+./workspace status
 ```
 
 Research tools:
@@ -288,16 +304,7 @@ Site build:
 
 ```bash
 cd wikip.co
-git submodule update --init --recursive
-npm ci --prefix site
-NODE_OPTIONS=--max-old-space-size=5168 npm --prefix site run build
+./scripts/build-site
 ```
 
-## Current Workspace Notes
-
-At the time this README was refreshed on `2026-05-05`, the top-level workspace had newer checked-out commits for:
-
-- `content`: workspace pin `74edd067...`, checkout `463d66a...`
-- `research-tools`: workspace pin `31859f8...`, checkout `80d0f64...`
-
-That is why the top-level `git status` reports those submodules as modified even though the child repos themselves are clean. Commit the pointer updates in this workspace only if those newer child commits should become the default checkout for future users/agents.
+The site helper uses the sibling `content` checkout when available. Set `CONTENT_REPO_ROOT` to use a different content checkout; otherwise it creates an ignored build-time checkout under `wikip.co/.build/`.
