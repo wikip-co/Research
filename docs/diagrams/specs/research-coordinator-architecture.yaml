@@ -1,0 +1,100 @@
+title: Research Coordinator Repository Architecture
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.65"
+  pad: "0.5"
+clusters:
+  - id: tracked
+    label: Tracked by wikip-co/Research
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#475569"
+  - id: local
+    label: Ignored local workspace paths
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: enforcement
+    label: Boundary enforcement
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: agents
+    label: "AGENTS.md\nrepository rules and guidance"
+    icon: generic.storage.Storage
+    cluster: tracked
+  - id: docs
+    label: "docs/\nrunbooks, style guides, diagrams"
+    icon: generic.storage.Storage
+    cluster: tracked
+  - id: manifest
+    label: "workspace-repos.tsv\nthree managed repositories"
+    icon: generic.storage.Storage
+    cluster: tracked
+  - id: workspace
+    label: "workspace\nsync, status, validate, migrate, verify"
+    icon: onprem.vcs.Git
+    cluster: tracked
+  - id: migration
+    label: "migrate-legacy-submodules\npreflight, relocate, rollback"
+    icon: generic.os.LinuxGeneral
+    cluster: tracked
+  - id: tools
+    label: "research-tools/\nstandalone .git"
+    icon: programming.language.Python
+    cluster: local
+  - id: content
+    label: "content/\nstandalone .git"
+    icon: onprem.vcs.Github
+    cluster: local
+  - id: site
+    label: "wikip.co/\nstandalone .git"
+    icon: programming.language.NodeJS
+    cluster: local
+  - id: ci
+    label: "Validate Workspace CI\nmanifest + shell syntax"
+    icon: onprem.ci.GithubActions
+    cluster: enforcement
+  - id: guard
+    label: "Flat-boundary guard\nreject gitlinks and .gitmodules"
+    icon: onprem.ci.GithubActions
+    cluster: enforcement
+edges:
+  - from: agents
+    to: docs
+    label: directs contributors
+  - from: manifest
+    to: workspace
+    label: repository inventory
+  - from: workspace
+    to: tools
+    label: clone/fetch/status
+  - from: workspace
+    to: content
+    label: clone/fetch/status
+  - from: workspace
+    to: site
+    label: clone/fetch/status
+  - from: migration
+    to: tools
+    label: legacy gitdir relocation
+    style: dashed
+  - from: migration
+    to: content
+    label: legacy gitdir relocation
+    style: dashed
+  - from: migration
+    to: site
+    label: legacy gitdir relocation
+    style: dashed
+  - from: ci
+    to: manifest
+    label: validates
+  - from: ci
+    to: workspace
+    label: syntax checks
+  - from: guard
+    to: ci
+    label: required invariant

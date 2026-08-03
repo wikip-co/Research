@@ -1,0 +1,99 @@
+title: Canonical Research Paper Workflow Lifecycle
+direction: LR
+graph_attr:
+  ranksep: "0.85"
+  nodesep: "0.6"
+  pad: "0.5"
+clusters:
+  - id: intake
+    label: Intake database lifecycle
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: authoring
+    label: Content repository lifecycle
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+  - id: completion
+    label: Completion and provenance
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: discovered
+    label: "discovered\nScholar occurrence linked to paper"
+    icon: oci.monitoring.Email
+    cluster: intake
+  - id: scraped
+    label: "scraped\nnormalized evidence packet"
+    icon: programming.language.Python
+    cluster: intake
+  - id: matched
+    label: "matched\nexisting path or new target"
+    icon: onprem.vcs.Git
+    cluster: intake
+  - id: drafted
+    label: "drafted\nMarkdown change prepared"
+    icon: generic.storage.Storage
+    cluster: authoring
+  - id: committed
+    label: "committed\ncontent branch commit"
+    icon: onprem.vcs.Git
+    cluster: authoring
+  - id: pr_open
+    label: "pr_open\ndraft pull request"
+    icon: onprem.vcs.Github
+    cluster: authoring
+  - id: merged
+    label: "merged\ncontent/main SHA"
+    icon: onprem.vcs.Github
+    cluster: completion
+    status: healthy
+  - id: archive
+    label: "source archive\nPDF/snapshot provenance"
+    icon: generic.storage.Storage
+    cluster: completion
+  - id: paper_record
+    label: "papers table\nidentity + path + commit + PR"
+    icon: generic.database.SQL
+    cluster: completion
+edges:
+  - from: discovered
+    to: scraped
+    label: retrieve selected source
+  - from: scraped
+    to: matched
+    label: duplicate and content search
+  - from: matched
+    to: drafted
+    label: append or create
+  - from: drafted
+    to: committed
+    label: branch commit
+  - from: committed
+    to: pr_open
+    label: push and open PR
+  - from: pr_open
+    to: drafted
+    label: requested revision
+    style: dashed
+  - from: pr_open
+    to: merged
+    label: approved merge
+  - from: scraped
+    to: archive
+    label: optional snapshot
+    style: dashed
+  - from: archive
+    to: paper_record
+    label: archive_path
+  - from: discovered
+    to: paper_record
+    label: canonical identity
+  - from: matched
+    to: paper_record
+    label: matched_content_path
+  - from: merged
+    to: paper_record
+    label: commit SHA and PR URL

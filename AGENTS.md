@@ -18,6 +18,7 @@ This repository is a flat coordinator for several standalone repositories. Read 
 ## Validation
 
 - Validate the coordinator with `bash -n workspace` and `./workspace validate`.
+- After editing an architecture specification, run `docs/diagrams/render-diagrams` and commit the YAML source with its SVG and PNG renders.
 - On an upgraded legacy checkout, require `./workspace verify-layout` to pass; `workspace sync` alone does not detach old submodule gitdirs.
 - Validate site integration with `wikip.co/scripts/build-site`; it fetches or copies content without nesting Git metadata.
 - Inspect each repository's `git status` separately before handing off changes.
