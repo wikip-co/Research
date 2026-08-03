@@ -1,3 +1,9 @@
 .claude/
 *.swp
 .*.swp
+
+# Standalone repositories managed by ./workspace. These paths deliberately are
+# not part of the Research repository's Git tree.
+/content/
+/research-tools/
+/wikip.co/
