@@ -17,8 +17,9 @@ There are two intake paths and one guarded publication pipeline:
   enqueue them, and let `local-worker` claim one due job at a time.
 
 Both paths scrape and validate a research packet, deduplicate and match the
-source, ask the local llama.cpp model for a structured draft and critic pass,
-run deterministic quality gates, and prepare an isolated content patch. A
+source, ask the local llama.cpp model for a structured draft plus independent
+placement and evidence reviews, run deterministic quality gates, and prepare
+an isolated content patch. A
 draft PR is possible only with `--publish`.
 
 ![Local LLM Research Publisher production flow](diagrams/rendered/local-publisher-production-flow.svg)
@@ -58,6 +59,15 @@ the same paper that was scraped. A DOI whose Crossref title materially differs
 from the scraped title is rejected instead of letting the model cite one paper
 while summarizing another.
 
+Publisher metadata is not trusted merely because a field is nonempty. A DOI
+must match DOI syntax; labels such as `DOI:` are discarded. Values such as
+`Authors and Affiliations`, `Ovid`, and `Unknown` are placeholders rather than
+citation metadata. The scraper can recover a DOI from the URL/body, replace
+placeholder authors/journal/date from Crossref or PubMed, and recover the first
+complete Abstract paragraph from the article body instead of using an
+ellipsized description. `metadata_repairs` records what changed, while any
+remaining `citation_metadata_issues` blocks publication.
+
 ## Quality contract
 
 For files below `content/Natural Healing/`,
@@ -85,7 +95,39 @@ Important outcomes are intentional:
 
 The local publisher currently appends to a confidently matched existing
 article. It does not autonomously create a new article. An uncertain placement
-becomes `needs_review`.
+becomes `needs_review`. For example, a paper centered on one cultivar or
+compound may appropriately stop rather than being forced into a broader tea
+page; create the more specific article through the reviewed manual workflow and
+then rerun matching.
+
+One plan also has one target. For a paper that covers green tea generally,
+Biluochun specifically, and an isolated compound such as DMY, the planner must
+limit bullets to the entity that belongs on the selected page or stop for
+review. It may not use a broad page as a catch-all for compound-specific
+mechanisms. If two or more bullets introduce an isolated compound that the
+target does not currently mention, deterministic policy adds a grounded
+`unsafe_context_inference` review finding; required mode must revise the plan or
+use the audited human override.
+
+### How the critic works
+
+Each draft attempt can make two independent local-model review calls:
+
+- the **placement review** receives the source packet, selected candidate
+  metadata, selected target Markdown, draft plan, and deterministic findings;
+- the **evidence review** receives the same grounded context but focuses on
+  source support, claim strength, study type, one-idea bullets, source
+  integrity, and material limitations.
+
+Both return issues from fixed code sets with `warning`, `review`, or `blocking`
+severity. Every objection must include an exact contiguous quotation from the
+source or selected target page; `wrong_target_page` requires both. Unknown
+codes, non-exact quotations, and self-contradictory findings are preserved as
+rejected critic findings but cannot gate the draft. Safety findings such as
+study-type inflation are promoted to at least `review` severity. The publisher,
+not the model, derives approval from the validated issues. Deterministic code
+remains authoritative for literal source containment, near-verbatim similarity,
+candidate paths, and preclinical heading scope.
 
 ## Current iconium runtime
 
@@ -94,7 +136,7 @@ Observed on 2026-08-09:
 | Component | State | Address or schedule | Purpose |
 | --- | --- | --- | --- |
 | `research-triage-ui.service` | active | local/LAN port `8765` | curate intake rows and run the legacy Codex path |
-| `qwen-moe-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible draft/critic API |
+| `qwen-moe-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible draft/review API |
 | `research-flaresolverr` | active Podman container | `127.0.0.1:8191` | browser/anti-bot retrieval fallback |
 | `research-db-backup.timer` | enabled | nightly around 03:30 | online SQLite backup and NAS integrity check |
 | `research-scholar-sync.timer` | not installed | template: every 30 minutes | passive Gmail alert ingestion |
@@ -110,7 +152,9 @@ before starting another port-8080 unit.
 ![Local llama.cpp integration](diagrams/rendered/local-llm-stack-integration.svg)
 
 Because the active llama server uses `-np 1`, run one publication job at a
-time. A job performs a draft call and a critic call sequentially.
+time. Deterministically invalid plans are repaired before critic calls are
+spent. Once a plan passes those checks, placement and evidence reviews run
+sequentially.
 
 ## First-line health checks
 
@@ -184,6 +228,40 @@ Only after that review, rerun with publication enabled:
 `origin/main`, pushes it, and opens a draft PR after every gate passes. It does
 not merge the PR.
 
+### Critic modes and human override
+
+Required mode is the default and is the only normal publication path:
+
+```bash
+./agent-workflow local-publish URL --critic-mode required
+```
+
+Advisory mode runs and records both critics, then may render a patch if all
+deterministic gates pass. Even if `--publish` is present, commit/push/PR creation
+is suppressed and the report records `publication_suppressed`:
+
+```bash
+./agent-workflow local-publish URL --critic-mode advisory --publish
+```
+
+Off mode skips the critic calls and is manual ad-hoc dry-run only;
+`--critic-mode off --publish` is rejected.
+
+After a human has reviewed the source identity, citation metadata, selected
+target, draft, critic findings, and diff, a required-mode critic rejection may
+be overridden explicitly:
+
+```bash
+./agent-workflow local-publish URL --critic-mode required --publish \
+  --allow-critic-rejection \
+  --override-reason "Human reviewed target and evidence"
+```
+
+This cannot bypass packet/citation metadata, duplicate, exact quotation,
+near-verbatim, preclinical placement, or rendered-Markdown gates. The JSON
+report and draft PR retain the findings and reason. The result remains a draft
+PR and is never auto-merged.
+
 ## Passive database workflow
 
 Sync recent Scholar alerts manually:
@@ -215,6 +293,10 @@ Allow one passing job to open a draft PR:
 The queue uses atomic leases, lease expiry recovery, bounded retries, and an
 append-only event history. Active-source and active-article uniqueness indexes
 prevent the same candidate from being enqueued twice.
+
+`local-worker` is hard-wired to required critic mode. It exposes no override
+flags, and its internal passive-worker context rejects any attempted critic
+override.
 
 ![Durable publication job lifecycle](diagrams/rendered/publication-job-lifecycle.svg)
 
@@ -371,6 +453,9 @@ and deployment operations. Generated HTML is never an authoring target.
 | page is a robot/CAPTCHA/error page | packet warnings, scraper backend, Flare logs | do not override the packet gate; fix retrieval or use another authoritative source |
 | FlareSolverr says success but packet is rejected | returned title/body and fatal-page markers | treat Flare success as transport success only; allow browser fallback or reject |
 | DOI and title mismatch | scraped title, DOI source, Crossref title | reject and correct source identity; never force the DOI |
+| invalid DOI, placeholder authors/journal/date, or truncated abstract | `metadata_repairs` and `citation_metadata_issues` | repair retrieval/enrichment; these deterministic citation gates cannot be overridden |
+| critic issue is unquoted or contradicts itself | critic `rejected_issues` and validation warnings | treat it as non-gating model noise; do not edit the report to force a decision |
+| grounded critic `review`/`blocking` issue | placement/evidence review, exact quotes, selected target | revise or choose a better target; use the audited ad-hoc override only after human review |
 | job remains leased after interruption | lease owner, expiry, events, service logs | wait for expiry or perform a documented recovery while worker is stopped |
 | repeated `retry` becomes `failed` | event error history and attempt count | repair the underlying dependency, then explicitly re-enqueue rather than hiding history |
 | `needs_review` | target scores, headings, study design, critic issues | choose a target or edit manually; do not coerce an uncertain automated append |

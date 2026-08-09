@@ -24,7 +24,7 @@ The preferred path from alert ingestion and human triage through evidence extrac
 
 ### Local publisher production flow
 
-The implemented ad-hoc and passive intake paths through deterministic scraping/matching, local-model draft and critic passes, hard quality gates, isolated content worktrees, draft PR review, and downstream deployment.
+The implemented ad-hoc and passive intake paths through deterministic scraping/matching, a local-model draft plus separate placement/evidence reviews, hard quality gates, isolated content worktrees, draft PR review, and downstream deployment.
 
 [Open SVG](rendered/local-publisher-production-flow.svg) · [Open PNG](rendered/local-publisher-production-flow.png) · [Edit specification](specs/local-publisher-production-flow.yaml)
 
@@ -80,7 +80,7 @@ The observed active triage, llama.cpp, FlareSolverr, and backup components; the 
 
 ### Local llama.cpp stack integration
 
-The structured draft/critic API calls from `local_publish.py` through the active OpenAI-compatible port, Qwen systemd unit, rootless ROCm Toolbx, model, and Strix Halo GPU, including mutually exclusive port-8080 alternatives.
+The structured draft and placement/evidence review API calls from `local_publish.py` through the active OpenAI-compatible port, Qwen systemd unit, rootless ROCm Toolbx, model, and Strix Halo GPU, including mutually exclusive port-8080 alternatives.
 
 [Open SVG](rendered/local-llm-stack-integration.svg) · [Open PNG](rendered/local-llm-stack-integration.png) · [Edit specification](specs/local-llm-stack-integration.yaml)
 

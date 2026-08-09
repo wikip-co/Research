@@ -39,8 +39,20 @@ nodes:
   - id: claims
     label: "Claim-strength gate\nstudy design, species, and limits preserved"
     cluster: evidence
-  - id: critic
-    label: "Model critic\nindependent second-pass objections"
+  - id: mode
+    label: "Critic mode\nrequired (default), advisory, or off"
+    cluster: evidence
+  - id: placement
+    label: "Placement review\nselected target Markdown + candidate metadata"
+    cluster: evidence
+  - id: evidencecritic
+    label: "Evidence review\nsupport, scope, overclaim, limitations"
+    cluster: evidence
+  - id: criticvalidation
+    label: "Critic evidence gate\nfixed codes, severity, exact quotes, no contradictions"
+    cluster: evidence
+  - id: override
+    label: "Audited ad-hoc override\nhuman reason; never available to worker"
     cluster: evidence
   - id: style
     label: "Style gate\nauthoritative Natural Healing guide"
@@ -52,7 +64,7 @@ nodes:
     label: "Git scope gate\nonly intended content file changes"
     cluster: repo
   - id: pass
-    label: "Publish-eligible plan\nstill requires explicit publish mode"
+    label: "Validated output\nrequired may draft-PR; advisory/off patch only"
     icon: onprem.vcs.Github
     cluster: repo
   - id: stop
@@ -70,9 +82,30 @@ edges:
   - from: quotes
     to: claims
   - from: claims
-    to: critic
-  - from: critic
+    to: mode
+  - from: mode
+    to: placement
+    label: required or advisory
+  - from: mode
+    to: evidencecritic
+    label: required or advisory
+  - from: placement
+    to: criticvalidation
+  - from: evidencecritic
+    to: criticvalidation
+  - from: criticvalidation
     to: style
+    label: approved or advisory
+  - from: criticvalidation
+    to: override
+    label: "required rejection + explicit human reason"
+    style: dashed
+  - from: override
+    to: style
+  - from: mode
+    to: style
+    label: off; manual dry-run
+    style: dashed
   - from: style
     to: render
   - from: render
@@ -95,7 +128,7 @@ edges:
   - from: claims
     to: stop
     style: dashed
-  - from: critic
+  - from: criticvalidation
     to: stop
     style: dashed
   - from: render

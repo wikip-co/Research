@@ -54,8 +54,15 @@ nodes:
     label: "Draft pass\nstructured publication plan"
     icon: programming.language.Python
     cluster: judgment
-  - id: critic
-    label: "Critic pass\nevidence and style review"
+  - id: mode
+    label: "Critic mode\nrequired, advisory, or off"
+    cluster: judgment
+  - id: placement
+    label: "Placement critic\ntarget page and heading"
+    icon: programming.language.Python
+    cluster: judgment
+  - id: evidence
+    label: "Evidence critic\nsupport, scope, and limits"
     icon: programming.language.Python
     cluster: judgment
   - id: gates
@@ -100,11 +107,24 @@ edges:
     to: draft
     label: target article and evidence
   - from: draft
-    to: critic
+    to: mode
     label: JSON plan
-  - from: critic
+  - from: mode
+    to: placement
+    label: "required/advisory + selected target"
+  - from: mode
+    to: evidence
+    label: "required/advisory + source packet"
+  - from: mode
     to: gates
-    label: revised plan
+    label: off; manual patch only
+    style: dashed
+  - from: placement
+    to: gates
+    label: quoted fixed-code issues
+  - from: evidence
+    to: gates
+    label: quoted fixed-code issues
   - from: gates
     to: worktree
     label: all gates pass

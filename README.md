@@ -29,7 +29,7 @@ Two intake paths feed the same guarded production pipeline:
 
 The scraper produces a validated research packet, deterministic code performs
 deduplication and hybrid content matching, the local llama.cpp model produces a
-structured draft and critic review, and hard validators decide whether a patch
+structured draft plus placement/evidence reviews, and hard validators decide whether a patch
 is safe. Publication mode can open a **draft** PR in `content`; it never
 auto-merges. A merged content PR triggers the exact-SHA Hexo build and
 Cloudflare Pages deployment.
@@ -114,6 +114,7 @@ Common paths:
 # Ad-hoc source: dry run, then explicitly allow a draft PR.
 ./agent-workflow local-publish 'https://example.org/paper'
 ./agent-workflow local-publish 'https://example.org/paper' --publish
+./agent-workflow local-publish 'https://example.org/paper' --critic-mode advisory
 
 # Database backlog: bounded enqueue and one-job worker.
 ./agent-workflow enqueue-local-backlog --status selected --min-score 12 --limit 10

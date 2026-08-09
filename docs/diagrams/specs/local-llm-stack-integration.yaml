@@ -33,8 +33,11 @@ nodes:
   - id: draft
     label: "Draft request\nstructured JSON, thinking disabled"
     cluster: research
-  - id: critic
-    label: "Critic request\nsecond sequential pass"
+  - id: placement
+    label: "Placement review\nsecond sequential request"
+    cluster: research
+  - id: evidence
+    label: "Evidence review\nthird sequential request"
     cluster: research
   - id: endpoint
     label: "localhost port 8080\nOpenAI /v1 Chat Completions"
@@ -71,11 +74,17 @@ edges:
     to: endpoint
     label: first request
   - from: endpoint
-    to: critic
+    to: placement
     label: draft JSON returned
-  - from: critic
+  - from: placement
     to: endpoint
     label: second request
+  - from: endpoint
+    to: evidence
+    label: placement JSON returned
+  - from: evidence
+    to: endpoint
+    label: third request
   - from: config
     to: orchestrator
     label: LOCAL_LLM variables

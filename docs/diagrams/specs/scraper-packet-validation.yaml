@@ -52,6 +52,10 @@ nodes:
     icon: programming.language.Python
     cluster: validation
   - id: enrich
+    label: "Recover DOI and abstract\ndiscard placeholder metadata"
+    icon: programming.language.Python
+    cluster: validation
+  - id: external
     label: "Crossref, PubMed, Unpaywall\nmetadata enrichment"
     icon: onprem.network.Internet
     cluster: validation
@@ -101,6 +105,8 @@ edges:
   - from: extract
     to: enrich
   - from: enrich
+    to: external
+  - from: external
     to: consistency
   - from: consistency
     to: packet
