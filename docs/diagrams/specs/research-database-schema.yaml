@@ -1,0 +1,99 @@
+title: Research Intake and Publication Database Relationships
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: intake
+    label: Scholar alert intake
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: canonical
+    label: Canonical paper lifecycle
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: legacy
+    label: Existing Codex job path
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+  - id: local
+    label: Local publisher queue
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+nodes:
+  - id: messages
+    label: "messages\nGmail message ID and raw alert"
+    icon: generic.database.SQL
+    cluster: intake
+  - id: articles
+    label: "articles\nURL, score, triage status, processed_at"
+    icon: generic.database.SQL
+    cluster: intake
+  - id: papers
+    label: "papers\ncanonical DOI/URL, workflow state, PR"
+    icon: generic.database.SQL
+    cluster: canonical
+  - id: article_papers
+    label: "article_papers\nintake-to-canonical linkage"
+    icon: generic.database.SQL
+    cluster: canonical
+  - id: article_jobs
+    label: "article_jobs\nlegacy Codex executions"
+    icon: generic.database.SQL
+    cluster: legacy
+  - id: article_job_items
+    label: "article_job_items\nper-article legacy result"
+    icon: generic.database.SQL
+    cluster: legacy
+  - id: publication_jobs
+    label: "publication_jobs\ndurable local queue, leases, attempts, outcome"
+    icon: generic.database.SQL
+    cluster: local
+  - id: publication_events
+    label: "publication_job_events\nappend-only state and error history"
+    icon: generic.database.SQL
+    cluster: local
+  - id: backups
+    label: "Nightly SQLite snapshots\nNAS latest plus dated copies"
+    icon: generic.storage.Storage
+    cluster: canonical
+edges:
+  - from: messages
+    to: articles
+    label: one alert yields many candidates
+  - from: articles
+    to: article_papers
+    label: links intake records
+  - from: papers
+    to: article_papers
+    label: canonical identity
+  - from: article_jobs
+    to: article_job_items
+    label: contains
+  - from: articles
+    to: article_job_items
+    label: legacy selected items
+  - from: articles
+    to: publication_jobs
+    label: enqueue selected and unprocessed
+  - from: papers
+    to: publication_jobs
+    label: optional canonical paper key
+  - from: publication_jobs
+    to: publication_events
+    label: state audit trail
+  - from: articles
+    to: backups
+    label: same SQLite database
+    style: dashed
+  - from: papers
+    to: backups
+    style: dashed
+  - from: publication_jobs
+    to: backups
+    style: dashed

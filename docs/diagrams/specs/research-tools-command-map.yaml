@@ -1,0 +1,111 @@
+title: Research Tools Commands, Packages, and Outputs
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.5"
+  pad: "0.5"
+clusters:
+  - id: commands
+    label: agent-workflow commands
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#475569"
+  - id: packages
+    label: Owning package
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: outputs
+    label: Primary state or output
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: gmail_cmds
+    label: "backlog / queue / triage-ui\nScholar intake and curation"
+    cluster: commands
+  - id: scrape_cmds
+    label: "intake / scrape\nsource retrieval"
+    cluster: commands
+  - id: research_cmds
+    label: "search / match / check-ref\nsource and content lookup"
+    cluster: commands
+  - id: author_cmds
+    label: "append / publish\nmanual authoring path"
+    cluster: commands
+  - id: local_cmds
+    label: "local-publish / enqueue-local\nenqueue-local-backlog / local-worker"
+    cluster: commands
+  - id: media_cmds
+    label: "image and capture commands\nnew-article media"
+    cluster: commands
+  - id: gmail_pkg
+    label: gmail-reader
+    icon: programming.language.Python
+    cluster: packages
+  - id: scraper_pkg
+    label: web-scraper
+    icon: programming.language.Python
+    cluster: packages
+  - id: wiki_pkg
+    label: wiki-automation
+    icon: programming.language.Python
+    cluster: packages
+  - id: image_pkg
+    label: image-upload
+    icon: programming.language.Python
+    cluster: packages
+  - id: core_pkg
+    label: "content-agent-core\nshared browser, HTTP, env helpers"
+    icon: programming.language.Python
+    cluster: packages
+  - id: db
+    label: "scholar-alerts.db\nintake, paper, and job state"
+    icon: generic.database.SQL
+    cluster: outputs
+  - id: packet
+    label: "research packet\nJSON and archived provenance"
+    icon: generic.storage.Storage
+    cluster: outputs
+  - id: patch
+    label: "validated patch or draft PR\ncontent repository"
+    icon: onprem.vcs.Github
+    cluster: outputs
+  - id: media
+    label: "Cloudinary asset\nand frontmatter URL"
+    icon: saas.media.Cloudinary
+    cluster: outputs
+edges:
+  - from: gmail_cmds
+    to: gmail_pkg
+  - from: gmail_pkg
+    to: db
+  - from: scrape_cmds
+    to: scraper_pkg
+  - from: scraper_pkg
+    to: packet
+  - from: research_cmds
+    to: wiki_pkg
+  - from: author_cmds
+    to: wiki_pkg
+  - from: local_cmds
+    to: wiki_pkg
+  - from: local_cmds
+    to: scraper_pkg
+  - from: local_cmds
+    to: gmail_pkg
+  - from: wiki_pkg
+    to: patch
+  - from: media_cmds
+    to: image_pkg
+  - from: image_pkg
+    to: media
+  - from: core_pkg
+    to: scraper_pkg
+    label: shared helpers
+  - from: core_pkg
+    to: wiki_pkg
+    label: shared helpers
+  - from: core_pkg
+    to: image_pkg
+    label: shared helpers

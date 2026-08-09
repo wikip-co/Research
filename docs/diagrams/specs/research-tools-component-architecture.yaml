@@ -38,6 +38,10 @@ nodes:
     label: "Codex job\nagent judgment and edits"
     icon: programming.language.Python
     cluster: entrypoints
+  - id: local_worker
+    label: "Local publisher worker\ndurable queue or ad-hoc URL"
+    icon: programming.language.Python
+    cluster: entrypoints
   - id: core
     label: "content-agent-core\nenv, browser, HTTP helpers"
     icon: programming.language.Python
@@ -94,6 +98,10 @@ nodes:
     label: "GitHub CLI/API\ncontent pull requests"
     icon: onprem.vcs.Github
     cluster: integrations
+  - id: local_llm
+    label: "llama.cpp local API\ndraft and critic judgment"
+    icon: onprem.compute.Server
+    cluster: integrations
 edges:
   - from: wrapper
     to: gmail_reader
@@ -113,6 +121,18 @@ edges:
   - from: codex
     to: wrapper
     label: executes workflow
+  - from: local_worker
+    to: sqlite
+    label: atomic lease and events
+  - from: local_worker
+    to: scraper
+    label: validated packet
+  - from: local_worker
+    to: wiki
+    label: match, validate, worktree, PR
+  - from: local_worker
+    to: local_llm
+    label: sequential draft and critic
   - from: core
     to: scraper
     label: shared helpers

@@ -1,23 +1,36 @@
 # Database Architecture and Migration Plan
 
-Status: proposed; not yet implemented
-Originally assessed: 2026-05-11
+Status: SQLite production path implemented; PostgreSQL migration remains optional
+Originally assessed: 2026-05-11; updated: 2026-08-09
 
 ## Current State
 
-The research intake database uses SQLite on a desktop machine. This works well
-for a single local operator, but it has practical limits for a distributed
-workflow:
+The research intake and local publication queue use one SQLite primary on
+`iconium`. The implementation now includes:
 
-- SQLite serializes writes, so simultaneous agents can encounter lock
+- `messages` and `articles` for Gmail/Scholar intake and triage;
+- `papers` and `article_papers` for canonical identity and occurrence links;
+- `article_jobs` and `article_job_items` for the legacy triage/Codex path;
+- `publication_jobs` and `publication_job_events` for durable local-model jobs,
+  atomic leases, retries, terminal outcomes, and an append-only audit trail;
+- active-job uniqueness by source URL and article key; and
+- nightly online backups, integrity checks, dated retention, and a NAS `latest`
+  snapshot.
+
+![Research database relationships](diagrams/rendered/research-database-schema.svg)
+
+This works well for the current one-worker local publisher, but it has
+practical limits for a distributed workflow:
+
+- SQLite serializes writes, so many simultaneous agents can encounter lock
   contention and `SQLITE_BUSY` failures.
 - The database file is not safely or directly available to GitHub Actions
   runners or agents on other machines.
 - The desktop is not a reliable always-on server because it can reboot or
   sleep.
 
-The active paths, backup location, and restore commands remain documented in
-the **Research Intake Database** section of the root README.
+The active paths, queue administration, backup location, and recovery commands
+are documented in [`research-production-operations.md`](research-production-operations.md).
 
 ## Migration Goals
 
@@ -108,7 +121,9 @@ not currently necessary:
 
 ## Current Decision
 
-No migration has been executed. SQLite remains the active database at the
-paths documented in the root README. Hosting selection and implementation
-should be revisited when concurrent remote writers become an immediate
-requirement.
+No PostgreSQL migration has been executed. SQLite remains the active database,
+and the publisher intentionally processes one job at a time to match the local
+llama.cpp server's `-np 1` configuration. Hosting selection should be revisited
+only when concurrent remote writers or remote CI access become immediate
+requirements; PostgreSQL is not required by the production path documented
+today.

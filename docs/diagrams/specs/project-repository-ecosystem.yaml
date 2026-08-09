@@ -34,7 +34,7 @@ nodes:
     icon: programming.language.Python
     cluster: source
   - id: content
-    label: "wikip-co/content\n3,206 Markdown source files"
+    label: "wikip-co/content\nMarkdown publication source"
     icon: onprem.vcs.Github
     cluster: source
   - id: site
@@ -42,7 +42,7 @@ nodes:
     icon: programming.language.NodeJS
     cluster: source
   - id: public
-    label: "wikip-co/public\n4,466 generated site files"
+    label: "wikip-co/public\nautomation-owned generated site"
     icon: onprem.vcs.Github
     cluster: source
   - id: scholar
@@ -65,6 +65,10 @@ nodes:
     label: "Docker Hub\nanthonyrussano/wikip.co"
     icon: onprem.container.Docker
     cluster: delivery
+  - id: local_llm
+    label: "Local llama.cpp\nOpenAI-compatible judgment service"
+    icon: onprem.compute.Server
+    cluster: delivery
 edges:
   - from: research
     to: workspace
@@ -84,6 +88,9 @@ edges:
   - from: research_tools
     to: content
     label: draft content PR
+  - from: research_tools
+    to: local_llm
+    label: draft and critic requests
   - from: research_tools
     to: cloudinary
     label: uploads media

@@ -7,58 +7,50 @@ generator_root="${DIAGRAM_GENERATOR_ROOT:-${HOME}/diagram-generator}"
 generator_image="${DIAGRAM_GENERATOR_IMAGE:-diagram-gen:local}"
 spec_root="${diagram_root}/specs"
 render_root="${diagram_root}/rendered"
+container_engine="${CONTAINER_ENGINE:-}"
 
-if [[ ! -f "${generator_root}/pyproject.toml" ]]; then
-  printf 'diagram-generator not found: %s\n' "$generator_root" >&2
-  printf 'Set DIAGRAM_GENERATOR_ROOT to its checkout path.\n' >&2
+if [[ ! -x "${generator_root}/scripts/build-container.sh" ]]; then
+  printf 'diagram-generator not found or incomplete: %s\n' "$generator_root" >&2
   exit 1
+fi
+
+if [[ -z "$container_engine" ]]; then
+  if command -v podman >/dev/null 2>&1; then
+    container_engine=podman
+  elif command -v docker >/dev/null 2>&1; then
+    container_engine=docker
+  else
+    printf 'Neither Podman nor Docker is available.\n' >&2
+    exit 1
+  fi
+fi
+
+case "$container_engine" in
+  podman|docker) ;;
+  *) printf 'Unsupported container engine: %s\n' "$container_engine" >&2; exit 1 ;;
+esac
+
+if ! "$container_engine" image inspect "$generator_image" >/dev/null 2>&1; then
+  (
+    cd "$generator_root"
+    CONTAINER_ENGINE="$container_engine" ./scripts/build-container.sh
+  )
 fi
 
 mkdir -p "$render_root"
 
-render_spec() {
-  local spec="$1" name="$2" format="$3"
+run_args=(run --rm)
+if [[ "$container_engine" == podman ]]; then
+  run_args+=(--userns=keep-id --volume "${research_root}:/workspace:Z")
+else
+  run_args+=(--user "$(id -u):$(id -g)" --volume "${research_root}:/workspace")
+fi
 
-  if command -v dot >/dev/null 2>&1; then
-    (
-      cd "$generator_root"
-      uv run --extra render diagram-gen spec \
-        --spec "$spec" \
-        --out-dir "$render_root" \
-        --output "$name" \
-        --format "$format"
-    )
-    return
-  fi
+"$container_engine" "${run_args[@]}" "$generator_image" spec-batch \
+  --spec-dir /workspace/docs/diagrams/specs \
+  --out-dir /workspace/docs/diagrams/rendered \
+  --format svg --format png
 
-  if ! command -v podman >/dev/null 2>&1; then
-    printf 'Neither Graphviz dot nor Podman is available for spec rendering.\n' >&2
-    exit 1
-  fi
-  if ! podman image exists "$generator_image"; then
-    printf 'Diagram generator image not found: %s\n' "$generator_image" >&2
-    printf 'Build it with: podman build --file %s/Containerfile --tag %s %s\n' \
-      "$generator_root" "$generator_image" "$generator_root" >&2
-    exit 1
-  fi
-
-  local relative_spec="${spec#${research_root}/}"
-  podman run --rm --userns=keep-id \
-    --volume "${research_root}:/workspace:Z" \
-    "$generator_image" spec \
-    --spec "/workspace/${relative_spec}" \
-    --out-dir /workspace/docs/diagrams/rendered \
-    --output "$name" \
-    --format "$format"
-}
-
-for spec in "$spec_root"/*.yaml; do
-  name="$(basename -- "$spec" .yaml)"
-  for format in svg png; do
-    printf 'Rendering %s.%s\n' "$name" "$format"
-    render_spec "$spec" "$name" "$format"
-  done
-done
-
-printf 'Rendered %s specs into %s\n' \
-  "$(find "$spec_root" -maxdepth 1 -name '*.yaml' | wc -l)" "$render_root"
+printf 'Rendered %s specs into %s with %s image %s\n' \
+  "$(find "$spec_root" -maxdepth 1 -name '*.yaml' | wc -l)" \
+  "$render_root" "$container_engine" "$generator_image"

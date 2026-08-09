@@ -1,6 +1,6 @@
 # Wikip.co Content Publishing Runbook
 
-This workspace-level runbook documents the path from research ingestion to the live `wikip.co` site.
+This workspace-level runbook documents the controlled handoff from research ingestion to the live `wikip.co` site. Local publisher administration and queue recovery are covered in [`research-production-operations.md`](research-production-operations.md).
 
 ## Repository roles
 
@@ -17,13 +17,18 @@ The [architecture diagram gallery](diagrams/README.md) also covers the upstream 
 
 ## End-to-end flow
 
-1. An agent or human changes markdown in `content` and opens a PR there.
-2. After merge to `content/main`, `trigger-sites.yml` sends a `content-updated` repository dispatch containing the exact content SHA.
-3. `wikip.co/.github/workflows/generator.yml` checks out the site, that content SHA with full history, and `wikip-co/public` as separate build inputs.
-4. `scripts/prepare-content` copies publishable content into `site/source/_posts` without its `.git` directory, applies `site-content-excludes.txt`, and restores markdown mtimes from Git history.
-5. Hexo generates a clean `public` output tree.
-6. Actions synchronizes that output into its temporary `wikip-co/public` checkout, commits any changes, and pushes `main`.
-7. Cloudflare Pages deploys the generated repository. The same run builds and pushes the Docker image.
+1. An ad-hoc URL or leased database job is scraped into a validated research packet.
+2. The local llama.cpp model produces a structured draft and critic pass; deterministic gates validate evidence, style, rendering, and Git scope.
+3. Publication mode commits only the intended Markdown change from an isolated `origin/main` worktree and opens a draft PR in `content`.
+4. A human reviews and merges the content PR.
+5. After merge to `content/main`, `trigger-sites.yml` sends a `content-updated` repository dispatch containing the exact content SHA.
+6. `wikip.co/.github/workflows/generator.yml` checks out the site, that content SHA with full history, and `wikip-co/public` as separate build inputs.
+7. `scripts/prepare-content` copies publishable content into `site/source/_posts` without its `.git` directory, applies `site-content-excludes.txt`, and restores markdown mtimes from Git history.
+8. Hexo generates a clean `public` output tree.
+9. Actions synchronizes that output into its temporary `wikip-co/public` checkout, commits any changes, and pushes `main`.
+10. Cloudflare Pages deploys the generated repository. The same run builds and pushes the Docker image.
+
+The local publisher never auto-merges and never writes `wikip.co/public` or generated HTML.
 
 ## Local verification
 

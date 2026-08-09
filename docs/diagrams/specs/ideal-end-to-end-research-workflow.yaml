@@ -40,19 +40,19 @@ nodes:
     icon: generic.database.SQL
     cluster: discover
   - id: curate
-    label: "Human or agent curation\nselected / review / rejected"
+    label: "Human or rule-based curation\nselected / review / rejected"
     icon: onprem.client.User
     cluster: discover
   - id: scrape
-    label: "Retrieve full text or abstract\nURL / HTML / PDF"
+    label: "Retrieve and validate packet\nScrapling, FlareSolverr, browser"
     icon: programming.language.Python
     cluster: evaluate
   - id: evidence
-    label: "Assess relevance and limits\narchive source provenance"
+    label: "Verify title and DOI\nassess evidence and provenance"
     icon: generic.storage.Storage
     cluster: evaluate
   - id: match
-    label: "Search and match\nexisting content first"
+    label: "DOI/URL dedupe and hybrid match\nexisting content first"
     icon: onprem.vcs.Git
     cluster: evaluate
   - id: update
@@ -64,8 +64,12 @@ nodes:
     icon: saas.media.Cloudinary
     cluster: author
   - id: lint
-    label: "Apply style guides\nfrontmatter, citations, evidence"
+    label: "Local model draft and critic\nnear-verbatim evidence plan"
     icon: programming.language.Python
+    cluster: author
+  - id: gates
+    label: "Deterministic quality gates\nstyle, claims, render, Git scope"
+    icon: onprem.security.Vault
     cluster: author
   - id: draft_pr
     label: "Draft PR in content\nbranch, commit, push"
@@ -125,8 +129,11 @@ edges:
     to: lint
     label: frontmatter image
   - from: lint
+    to: gates
+    label: structured plan
+  - from: gates
     to: draft_pr
-    label: ready for review
+    label: all gates pass
   - from: draft_pr
     to: human_review
     label: review request

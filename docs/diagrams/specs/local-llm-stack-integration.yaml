@@ -1,0 +1,93 @@
+title: Local llama.cpp Stack and Research Publisher Integration
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: research
+    label: Research publisher
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: api
+    label: OpenAI-compatible boundary
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: runtime
+    label: Iconium llama.cpp runtime
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: alternatives
+    label: Mutually exclusive model services
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: orchestrator
+    label: "local_publish.py\ndeterministic orchestration"
+    icon: programming.language.Python
+    cluster: research
+  - id: draft
+    label: "Draft request\nstructured JSON, thinking disabled"
+    cluster: research
+  - id: critic
+    label: "Critic request\nsecond sequential pass"
+    cluster: research
+  - id: endpoint
+    label: "localhost port 8080\nOpenAI /v1 Chat Completions"
+    icon: onprem.network.Nginx
+    cluster: api
+  - id: service
+    label: "Qwen MoE Q8 systemd unit\nactive observed 2026-08-09"
+    icon: onprem.compute.Server
+    cluster: runtime
+  - id: toolbox
+    label: "Toolbx llama-rocm-7.2.4\nllama.cpp ROCm runtime"
+    icon: onprem.container.Docker
+    cluster: runtime
+  - id: model
+    label: "Qwen3.6 35B A3B\nQ8_0 MTP, 262k context, -np 1"
+    icon: generic.compute.Rack
+    cluster: runtime
+  - id: gpu
+    label: "AMD Strix Halo GPU\nfull model offload"
+    icon: generic.compute.Rack
+    cluster: runtime
+  - id: other
+    label: "Qwen 27B and Gemma units\ninactive; also bind port 8080"
+    icon: onprem.compute.Server
+    cluster: alternatives
+  - id: config
+    label: "Research defaults\nendpoint and model overridable by environment"
+    icon: onprem.security.Vault
+    cluster: api
+edges:
+  - from: orchestrator
+    to: draft
+  - from: draft
+    to: endpoint
+    label: first request
+  - from: endpoint
+    to: critic
+    label: draft JSON returned
+  - from: critic
+    to: endpoint
+    label: second request
+  - from: config
+    to: orchestrator
+    label: LOCAL_LLM variables
+  - from: endpoint
+    to: service
+  - from: service
+    to: toolbox
+  - from: toolbox
+    to: model
+  - from: model
+    to: gpu
+  - from: other
+    to: endpoint
+    label: stop active unit before switching
+    style: dashed

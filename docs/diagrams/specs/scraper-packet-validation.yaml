@@ -1,0 +1,111 @@
+title: Scraper Fallback and Research Packet Validation
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: request
+    label: Request normalization
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: retrieval
+    label: Retrieval ladder
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+  - id: validation
+    label: Packet validation and enrichment
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: url
+    label: "Original article URL\nretained for browser fallbacks"
+    icon: onprem.network.Internet
+    cluster: request
+  - id: normalize
+    label: "Canonical fetch URL\npublisher-specific normalization"
+    icon: programming.language.Python
+    cluster: request
+  - id: scrapling
+    label: "Scrapling HTTP retrieval\nfast primary attempt"
+    icon: programming.language.Python
+    cluster: retrieval
+  - id: fatal1
+    label: "Fatal-page detector\nbot, CAPTCHA, login, error, empty"
+    cluster: retrieval
+  - id: flare
+    label: "FlareSolverr\nJavaScript and anti-bot challenge pass"
+    icon: onprem.container.Docker
+    cluster: retrieval
+  - id: fatal2
+    label: "Validate returned page again\nchallenge success is not evidence"
+    cluster: retrieval
+  - id: browser
+    label: "agent-browser\nlast interactive fallback"
+    icon: ibm.user.Browser
+    cluster: retrieval
+  - id: extract
+    label: "Extract title, abstract, body\nauthors, DOI, metadata"
+    icon: programming.language.Python
+    cluster: validation
+  - id: enrich
+    label: "Crossref, PubMed, Unpaywall\nmetadata enrichment"
+    icon: onprem.network.Internet
+    cluster: validation
+  - id: consistency
+    label: "Title and DOI consistency\nconfirm metadata describes same paper"
+    cluster: validation
+  - id: packet
+    label: "Validated research packet\nstructured source bundle for the model"
+    icon: generic.storage.Storage
+    cluster: validation
+  - id: reject
+    label: "Reject packet\nrecord reason; do not draft"
+    cluster: validation
+edges:
+  - from: url
+    to: normalize
+  - from: normalize
+    to: scrapling
+  - from: scrapling
+    to: fatal1
+    label: HTML response
+  - from: fatal1
+    to: extract
+    label: usable article
+  - from: fatal1
+    to: flare
+    label: blocked or invalid
+  - from: url
+    to: flare
+    label: pass original URL
+    style: dashed
+  - from: flare
+    to: fatal2
+  - from: fatal2
+    to: extract
+    label: usable article
+  - from: fatal2
+    to: browser
+    label: still blocked
+  - from: browser
+    to: extract
+    label: usable article
+  - from: browser
+    to: reject
+    label: exhausted fallbacks
+    style: dashed
+  - from: extract
+    to: enrich
+  - from: enrich
+    to: consistency
+  - from: consistency
+    to: packet
+    label: identity is consistent
+  - from: consistency
+    to: reject
+    label: mismatch or weak evidence
+    style: dashed

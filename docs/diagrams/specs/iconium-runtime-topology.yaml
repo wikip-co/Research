@@ -56,19 +56,32 @@ nodes:
     cluster: iconium
     status: healthy
   - id: codex
-    label: "Background Codex jobs\nprocess selected rows"
+    label: "Background Codex jobs\nlegacy triage path"
     icon: programming.language.Python
     cluster: iconium
   - id: workflow
     label: "agent-workflow\norchestrator"
     icon: programming.language.Python
     cluster: iconium
+  - id: local_worker
+    label: "Local publisher\nqueue worker and ad-hoc path"
+    icon: programming.language.Python
+    cluster: iconium
+  - id: llm_service
+    label: "Qwen MoE Q8 systemd unit\nlocal API on port 8080"
+    icon: generic.os.LinuxGeneral
+    cluster: iconium
+    status: healthy
+  - id: llama_toolbox
+    label: "llama.cpp ROCm Toolbx\nQwen3.6 35B A3B Q8_0"
+    icon: onprem.container.Docker
+    cluster: iconium
   - id: scraper
     label: "web-scraper\nretrieval fallbacks"
     icon: programming.language.Python
     cluster: iconium
   - id: flaresolverr
-    label: "FlareSolverr API\n127.0.0.1:8191"
+    label: "research-flaresolverr container\nlocal API on port 8191"
     icon: onprem.container.Docker
     cluster: iconium
     attrs:
@@ -95,6 +108,14 @@ nodes:
     icon: generic.os.LinuxGeneral
     cluster: storage
     status: healthy
+  - id: scholar_template
+    label: "Scholar sync timer\ntracked template; not installed"
+    icon: generic.os.LinuxGeneral
+    cluster: storage
+  - id: publisher_template
+    label: "Local publisher timer\ntracked template; not installed"
+    icon: generic.os.LinuxGeneral
+    cluster: storage
   - id: nas
     label: "NAS backup target\n/mnt/naspi5/.../gmail-reader"
     icon: generic.storage.Storage
@@ -115,6 +136,18 @@ edges:
   - from: codex
     to: workflow
     label: invokes
+  - from: local_worker
+    to: workflow
+    label: uses commands and packages
+  - from: local_worker
+    to: sqlite
+    label: leases durable job
+  - from: local_worker
+    to: llm_service
+    label: draft and critic
+  - from: llm_service
+    to: llama_toolbox
+    label: starts runtime
   - from: gmail
     to: workflow
     label: gws queries
@@ -150,6 +183,14 @@ edges:
   - from: wiki
     to: github
     label: branch, push, PR
+  - from: scholar_template
+    to: sqlite
+    label: passive alert intake when enabled
+    style: dashed
+  - from: publisher_template
+    to: local_worker
+    label: one job per activation when enabled
+    style: dashed
   - from: timer
     to: sqlite
     label: SQLite-safe backup

@@ -28,6 +28,7 @@ If you are a Hermes (or human) picking up this stack: **start here**, then open 
 **Detail for tools/runtime:** [`wikip-co/research-tools` release notes](https://github.com/wikip-co/research-tools/blob/main/RELEASE_NOTES.md)
 **Workspace orientation:** [`README.md`](./README.md)
 **DB migration notes:** [`docs/database-architecture-and-migration.md`](./docs/database-architecture-and-migration.md)
+**Production operations:** [`docs/research-production-operations.md`](./docs/research-production-operations.md)
 
 ### Pipeline (reminder)
 
@@ -35,8 +36,9 @@ If you are a Hermes (or human) picking up this stack: **start here**, then open 
 Gmail / Google Scholar alerts
   -> research-tools/gmail-reader
   -> SQLite research intake DB
-  -> research-tools/web-scraper + wiki-automation
-  -> content markdown (PR)
+  -> validated packet + DOI/title identity gate
+  -> local llama.cpp draft + critic + deterministic gates
+  -> isolated content worktree + draft PR
   -> wikip.co Hexo build
   -> wikip-co/public / Cloudflare Pages
 ```
@@ -96,10 +98,35 @@ DB backups:    /mnt/naspi5/content-agent-backups/gmail-reader/
 | `research-db-backup.timer` | Nightly SQLite → NAS |
 | `container-research-flaresolverr.service` | FlareSolverr (see footnote) |
 | `hermes-gateway.service` | Iconium Hermes gateway |
+| `qwen-moe-server-q8.service` | Active Qwen3.6 35B A3B Q8_0 llama.cpp API on port 8080 |
+| `research-scholar-sync.timer` | Tracked template; not installed/enabled as observed 2026-08-09 |
+| `research-local-publisher.timer` | Tracked template; not installed/enabled as observed 2026-08-09 |
 
 ---
 
 ## What changed recently (cross-cutting)
+
+### 2026-08-09 — guarded local-model production path
+
+- Added ad-hoc and durable SQLite-queue publication through the local llama.cpp
+  model, including sequential structured draft and critic calls.
+- Hardened the retrieval contract: bot/CAPTCHA/login/error packets fail
+  regardless of length, FlareSolverr receives the original URL, its result is
+  revalidated, and DOI/title enrichment must identify the same paper.
+- Added hybrid content matching, exact-source-quote and near-verbatim Natural
+  Healing gates, study-design/claim validation, Markdown rendering checks, and
+  Git-scope validation.
+- Added isolated `origin/main` worktrees and optional draft PR creation; the
+  path never auto-merges.
+- Added `publication_jobs` and `publication_job_events` with atomic leases,
+  bounded retries, durable outcomes, and active-job deduplication.
+- Added Scholar-sync and local-publisher service/timer templates. They were not
+  installed or enabled; production activation remains an operator decision
+  after pilot review.
+- Preserved `docs/natural-healing-content-style-guide.md` unchanged as the
+  authoritative near-verbatim style baseline.
+- Expanded the architecture gallery from 11 to 19 diagrams and added the
+  canonical operator guide linked above.
 
 ### 2026-08-03 — operator handoff
 

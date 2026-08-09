@@ -1,0 +1,113 @@
+title: Iconium Research Services, Containers, and Schedules
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: active
+    label: Active observed 2026-08-09
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: templates
+    label: Tracked templates, not installed or enabled
+    graph_attr:
+      bgcolor: "#fefce8"
+      color: "#ca8a04"
+  - id: state
+    label: Persistent state and external systems
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+nodes:
+  - id: triage
+    label: "Research triage UI\nactive locally on port 8765"
+    icon: onprem.compute.Server
+    cluster: active
+  - id: llm
+    label: "Qwen MoE Q8 service\nactive locally on port 8080"
+    icon: onprem.compute.Server
+    cluster: active
+  - id: flare
+    label: "Research FlareSolverr\nPodman container on local port 8191"
+    icon: onprem.container.Docker
+    cluster: active
+  - id: backup_timer
+    label: "Research DB backup timer\nenabled nightly"
+    icon: onprem.compute.Server
+    cluster: active
+  - id: scholar_timer
+    label: "Scholar sync timer template\nGmail alert ingestion"
+    icon: onprem.compute.Server
+    cluster: templates
+  - id: publisher_timer
+    label: "Local publisher timer template\nenqueue plus one queued job"
+    icon: onprem.compute.Server
+    cluster: templates
+  - id: sqlite
+    label: "SQLite primary\nresearch-tools/gmail-reader/data"
+    icon: generic.database.SQL
+    cluster: state
+  - id: nas
+    label: "NAS backups\ndated and latest snapshots"
+    icon: generic.storage.Storage
+    cluster: state
+  - id: gmail
+    label: "Gmail via gws\nScholar alerts"
+    icon: oci.monitoring.Email
+    cluster: state
+  - id: content
+    label: "content Git repository\nand GitHub draft PRs"
+    icon: onprem.vcs.Github
+    cluster: state
+  - id: operator
+    label: "Operator\nsystemctl --user and journalctl --user"
+    icon: onprem.client.User
+    cluster: state
+edges:
+  - from: operator
+    to: triage
+    label: administer
+  - from: operator
+    to: llm
+    label: health and model selection
+  - from: operator
+    to: flare
+    label: container health
+  - from: operator
+    to: backup_timer
+    label: verify backups
+  - from: triage
+    to: sqlite
+    label: curate rows
+  - from: backup_timer
+    to: sqlite
+    label: SQLite online backup
+  - from: backup_timer
+    to: nas
+    label: snapshot and integrity check
+  - from: scholar_timer
+    to: gmail
+    label: scan alerts
+    style: dashed
+  - from: scholar_timer
+    to: sqlite
+    label: upsert intake rows
+    style: dashed
+  - from: publisher_timer
+    to: sqlite
+    label: enqueue and lease
+    style: dashed
+  - from: publisher_timer
+    to: llm
+    label: sequential draft and critic
+    style: dashed
+  - from: publisher_timer
+    to: flare
+    label: fallback retrieval
+    style: dashed
+  - from: publisher_timer
+    to: content
+    label: optional draft PR
+    style: dashed

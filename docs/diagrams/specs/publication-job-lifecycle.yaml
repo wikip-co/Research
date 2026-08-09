@@ -1,0 +1,125 @@
+title: Durable Local Publication Job Lifecycle
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.5"
+  pad: "0.5"
+clusters:
+  - id: ready
+    label: Queue and ownership
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: work
+    label: Processing states
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: outcomes
+    label: Durable outcomes
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: queued
+    label: queued
+    cluster: ready
+  - id: leased
+    label: "leased\nlease owner and expiry"
+    cluster: ready
+  - id: scraping
+    label: scraping
+    cluster: work
+  - id: matching
+    label: matching
+    cluster: work
+  - id: drafting
+    label: drafting
+    cluster: work
+  - id: validating
+    label: validating
+    cluster: work
+  - id: publishing
+    label: publishing
+    cluster: work
+  - id: pr_open
+    label: "pr_open\nprocessed_at set"
+    icon: onprem.vcs.Github
+    cluster: outcomes
+  - id: needs_review
+    label: "needs_review\nhuman decision required"
+    icon: onprem.client.User
+    cluster: outcomes
+  - id: rejected
+    label: "rejected\ninsufficient or unsafe evidence"
+    cluster: outcomes
+  - id: duplicate
+    label: "duplicate\nalready cited or already queued"
+    cluster: outcomes
+  - id: retry
+    label: "retry_wait\nattempt count and next_run_at"
+    cluster: ready
+  - id: failed
+    label: "failed\nretry budget exhausted"
+    cluster: outcomes
+  - id: events
+    label: "publication_job_events\nappend-only audit trail"
+    icon: generic.database.SQL
+    cluster: outcomes
+edges:
+  - from: queued
+    to: leased
+    label: atomic claim
+  - from: leased
+    to: scraping
+  - from: scraping
+    to: matching
+  - from: matching
+    to: drafting
+  - from: drafting
+    to: validating
+  - from: validating
+    to: publishing
+    label: publish mode
+  - from: validating
+    to: needs_review
+    label: safe dry-run result
+    style: dashed
+  - from: publishing
+    to: pr_open
+    label: PR URL verified
+  - from: scraping
+    to: rejected
+    label: permanent packet failure
+    style: dashed
+  - from: matching
+    to: duplicate
+    label: DOI or URL found
+    style: dashed
+  - from: leased
+    to: retry
+    label: transient failure or lease expiry
+    style: dashed
+  - from: scraping
+    to: retry
+    label: retryable retrieval failure
+    style: dashed
+  - from: retry
+    to: leased
+    label: due and attempts remain
+  - from: retry
+    to: failed
+    label: attempts exhausted
+  - from: queued
+    to: events
+    label: every transition recorded
+    style: dashed
+  - from: leased
+    to: events
+    style: dashed
+  - from: validating
+    to: events
+    style: dashed
+  - from: pr_open
+    to: events
+    style: dashed

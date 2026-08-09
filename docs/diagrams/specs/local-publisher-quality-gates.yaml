@@ -1,0 +1,106 @@
+title: Local Publisher Quality Gates and Fail-Closed Decisions
+direction: LR
+graph_attr:
+  ranksep: "0.95"
+  nodesep: "0.5"
+  pad: "0.5"
+clusters:
+  - id: source
+    label: Source identity and sufficiency
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: evidence
+    label: Evidence-faithful authoring
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: repo
+    label: Rendered Markdown and repository safety
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+nodes:
+  - id: packet
+    label: "Packet gate\nnot CAPTCHA/error; meaningful abstract or text"
+    cluster: source
+  - id: identity
+    label: "Identity gate\nDOI and title agree across sources"
+    cluster: source
+  - id: duplicate
+    label: "Reference gate\nDOI/URL not already cited"
+    cluster: source
+  - id: match
+    label: "Placement gate\nconfident existing Natural Healing target"
+    cluster: source
+  - id: quotes
+    label: "Near-verbatim gate\neach bullet grounded in source quotation"
+    cluster: evidence
+  - id: claims
+    label: "Claim-strength gate\nstudy design, species, and limits preserved"
+    cluster: evidence
+  - id: critic
+    label: "Model critic\nindependent second-pass objections"
+    cluster: evidence
+  - id: style
+    label: "Style gate\nauthoritative Natural Healing guide"
+    cluster: repo
+  - id: render
+    label: "Render gate\nfrontmatter, headings, footnotes, Markdown"
+    cluster: repo
+  - id: git
+    label: "Git scope gate\nonly intended content file changes"
+    cluster: repo
+  - id: pass
+    label: "Publish-eligible plan\nstill requires explicit publish mode"
+    icon: onprem.vcs.Github
+    cluster: repo
+  - id: stop
+    label: "Fail closed\nrejected, duplicate, needs review, or retry"
+    cluster: repo
+edges:
+  - from: packet
+    to: identity
+  - from: identity
+    to: duplicate
+  - from: duplicate
+    to: match
+  - from: match
+    to: quotes
+  - from: quotes
+    to: claims
+  - from: claims
+    to: critic
+  - from: critic
+    to: style
+  - from: style
+    to: render
+  - from: render
+    to: git
+  - from: git
+    to: pass
+  - from: packet
+    to: stop
+    label: any gate fails
+    style: dashed
+  - from: identity
+    to: stop
+    style: dashed
+  - from: duplicate
+    to: stop
+    style: dashed
+  - from: match
+    to: stop
+    style: dashed
+  - from: claims
+    to: stop
+    style: dashed
+  - from: critic
+    to: stop
+    style: dashed
+  - from: render
+    to: stop
+    style: dashed
+  - from: git
+    to: stop
+    style: dashed

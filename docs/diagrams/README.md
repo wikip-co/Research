@@ -2,7 +2,7 @@
 
 These diagrams describe the current Research workspace, its independently versioned repositories, the running `iconium` services, and the workflows that turn discovered research into the published `wikip.co` site.
 
-The YAML specifications in [`specs/`](specs/) are the editable sources. The committed SVGs are the preferred documentation format; matching PNGs are included for tools that do not render SVG. Repository file counts and runtime status were observed on `iconium` on 2026-08-03 and are point-in-time annotations, not architectural invariants.
+The YAML specifications in [`specs/`](specs/) are the editable sources. The committed SVGs are the preferred documentation format; matching PNGs are included for tools that do not render SVG. Runtime status was observed on `iconium` on 2026-08-09 and is a point-in-time annotation, not an architectural invariant.
 
 ## System and workflow views
 
@@ -22,6 +22,30 @@ The preferred path from alert ingestion and human triage through evidence extrac
 
 ![Ideal research-to-publication workflow](rendered/ideal-end-to-end-research-workflow.svg)
 
+### Local publisher production flow
+
+The implemented ad-hoc and passive intake paths through deterministic scraping/matching, local-model draft and critic passes, hard quality gates, isolated content worktrees, draft PR review, and downstream deployment.
+
+[Open SVG](rendered/local-publisher-production-flow.svg) · [Open PNG](rendered/local-publisher-production-flow.png) · [Edit specification](specs/local-publisher-production-flow.yaml)
+
+![Local LLM Research Publisher production flow](rendered/local-publisher-production-flow.svg)
+
+### Scraper packet validation
+
+How original and canonical URLs move through Scrapling, FlareSolverr, and agent-browser; why every response is checked for fatal pages; and how metadata enrichment is accepted only after title/DOI consistency checks.
+
+[Open SVG](rendered/scraper-packet-validation.svg) · [Open PNG](rendered/scraper-packet-validation.png) · [Edit specification](specs/scraper-packet-validation.yaml)
+
+![Scraper fallback and packet validation](rendered/scraper-packet-validation.svg)
+
+### Local publisher quality gates
+
+The fail-closed sequence for packet sufficiency, source identity, duplicate detection, placement, near-verbatim quotation, claim strength, critic review, style, rendering, and Git scope.
+
+[Open SVG](rendered/local-publisher-quality-gates.svg) · [Open PNG](rendered/local-publisher-quality-gates.png) · [Edit specification](specs/local-publisher-quality-gates.yaml)
+
+![Local publisher quality gates](rendered/local-publisher-quality-gates.svg)
+
 ### Flat local development and build-fetch model
 
 How a developer clones the coordinator, materializes standalone sibling repositories, verifies their Git boundaries, and prepares ignored content and output directories for a local Hexo build.
@@ -40,11 +64,27 @@ The implemented GitHub Actions handoff from `content/main` to an isolated `wikip
 
 ### Iconium runtime and data topology
 
-The currently observed local services and data boundaries: the triage UI, Codex jobs, SQLite primary database, nightly backup timer, FlareSolverr endpoint, credentials, external APIs, and NAS backup target.
+The currently observed local services and data boundaries: triage and legacy Codex jobs, the local publisher and llama.cpp runtime, SQLite primary database, nightly backup timer, tracked-but-disabled automation timers, FlareSolverr, credentials, external APIs, and NAS backup target.
 
 [Open SVG](rendered/iconium-runtime-topology.svg) · [Open PNG](rendered/iconium-runtime-topology.png) · [Edit specification](specs/iconium-runtime-topology.yaml)
 
 ![Iconium Research runtime and data topology](rendered/iconium-runtime-topology.svg)
+
+### Operator services and schedules
+
+The observed active triage, llama.cpp, FlareSolverr, and backup components; the tracked-but-disabled Scholar/publisher timers; and their relationships to Gmail, SQLite, NAS, content, and operator controls.
+
+[Open SVG](rendered/operator-services-and-schedules.svg) · [Open PNG](rendered/operator-services-and-schedules.png) · [Edit specification](specs/operator-services-and-schedules.yaml)
+
+![Iconium Research services and schedules](rendered/operator-services-and-schedules.svg)
+
+### Local llama.cpp stack integration
+
+The structured draft/critic API calls from `local_publish.py` through the active OpenAI-compatible port, Qwen systemd unit, rootless ROCm Toolbx, model, and Strix Halo GPU, including mutually exclusive port-8080 alternatives.
+
+[Open SVG](rendered/local-llm-stack-integration.svg) · [Open PNG](rendered/local-llm-stack-integration.png) · [Edit specification](specs/local-llm-stack-integration.yaml)
+
+![Local llama.cpp integration](rendered/local-llm-stack-integration.svg)
 
 ## Repository architecture views
 
@@ -64,6 +104,14 @@ The Python workspace packages, command orchestration, triage/runtime surfaces, e
 
 ![Research Tools component and dependency architecture](rendered/research-tools-component-architecture.svg)
 
+### Research-tools command map
+
+The `agent-workflow` command families, the Python workspace package that owns each action, shared helpers, and the database, packet, media, patch, and PR outputs.
+
+[Open SVG](rendered/research-tools-command-map.svg) · [Open PNG](rendered/research-tools-command-map.png) · [Edit specification](specs/research-tools-command-map.yaml)
+
+![Research Tools command and package map](rendered/research-tools-command-map.svg)
+
 ### Research-tools paper lifecycle
 
 The canonical state progression from a discovered candidate through scrape, match, draft, commit, pull request, merge, archival provenance, and the corresponding `papers` record.
@@ -71,6 +119,22 @@ The canonical state progression from a discovered candidate through scrape, matc
 [Open SVG](rendered/research-tools-paper-lifecycle.svg) · [Open PNG](rendered/research-tools-paper-lifecycle.png) · [Edit specification](specs/research-tools-paper-lifecycle.yaml)
 
 ![Canonical research paper workflow lifecycle](rendered/research-tools-paper-lifecycle.svg)
+
+### Durable publication job lifecycle
+
+The lease-based local queue from `queued` through processing, retry, human-review, rejection, duplicate, failure, and verified draft-PR outcomes, with its append-only event history.
+
+[Open SVG](rendered/publication-job-lifecycle.svg) · [Open PNG](rendered/publication-job-lifecycle.png) · [Edit specification](specs/publication-job-lifecycle.yaml)
+
+![Durable local publication job lifecycle](rendered/publication-job-lifecycle.svg)
+
+### Research database relationships
+
+The intake, canonical paper, legacy Codex job, local publication queue, event history, and nightly backup relationships within the SQLite production database.
+
+[Open SVG](rendered/research-database-schema.svg) · [Open PNG](rendered/research-database-schema.png) · [Edit specification](specs/research-database-schema.yaml)
+
+![Research database relationships](rendered/research-database-schema.svg)
 
 ### Content repository
 
@@ -104,11 +168,10 @@ The renderer intentionally uses the separate [`diagram-generator`](https://githu
 docs/diagrams/render-diagrams
 ```
 
-If Graphviz is installed on the host, the wrapper runs the generator through `uv`. Otherwise it uses Podman and the local `diagram-gen:local` image. Build or refresh that image from the generator checkout with:
+The wrapper is container-first and does not depend on host Python or Graphviz. Build or refresh the pinned generator image from its checkout with:
 
 ```bash
-podman build --file ~/diagram-generator/Containerfile \
-  --tag diagram-gen:local ~/diagram-generator
+~/diagram-generator/scripts/build-container.sh
 ```
 
 Override either location when needed:
@@ -120,3 +183,10 @@ docs/diagrams/render-diagrams
 ```
 
 Commit the YAML specification and both rendered formats together. Inspect the PNG at full resolution after any layout change; a successful render does not guarantee readable edge routing.
+
+Known reproducibility blind spot: PNG output is byte-stable across repeated
+container renders, but the current generator/Graphviz SVG path embeds random
+internal node identifiers. Consequently, semantically identical SVGs can have
+different checksums even when their visible layout and PNG render are
+unchanged. Review SVG diffs for identifier-only churn until the generator makes
+those IDs deterministic.

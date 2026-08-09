@@ -1,0 +1,130 @@
+title: Local LLM Research Publisher Production Flow
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: intake
+    label: Intake paths
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: deterministic
+    label: Deterministic orchestration
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: judgment
+    label: Local model judgment
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: delivery
+    label: Controlled delivery
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: adhoc
+    label: "Ad-hoc URL\nlocal-publish URL"
+    icon: onprem.client.User
+    cluster: intake
+  - id: alerts
+    label: "Google Scholar alerts\nGmail ingestion"
+    icon: oci.monitoring.Email
+    cluster: intake
+  - id: queue
+    label: "SQLite publication queue\nselected, unprocessed articles"
+    icon: generic.database.SQL
+    cluster: intake
+  - id: lease
+    label: "Atomic lease\none worker owns one job"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: scrape
+    label: "Scrape with fallbacks\nproduce validated packet"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: dedupe
+    label: "DOI and URL dedupe\nhybrid topic match"
+    icon: onprem.vcs.Git
+    cluster: deterministic
+  - id: draft
+    label: "Draft pass\nstructured publication plan"
+    icon: programming.language.Python
+    cluster: judgment
+  - id: critic
+    label: "Critic pass\nevidence and style review"
+    icon: programming.language.Python
+    cluster: judgment
+  - id: gates
+    label: "Hard validators\npacket, quote, claim, render, Git scope"
+    icon: onprem.security.Vault
+    cluster: deterministic
+  - id: worktree
+    label: "Isolated content worktree\ncreated from origin/main"
+    icon: onprem.vcs.Git
+    cluster: delivery
+  - id: pr
+    label: "Draft pull request\nnever auto-merge"
+    icon: onprem.vcs.Github
+    cluster: delivery
+  - id: review
+    label: "Human editorial review\naccuracy and placement"
+    icon: onprem.client.User
+    cluster: delivery
+  - id: site
+    label: "Merge triggers exact-SHA\nwikip.co build and deployment"
+    icon: saas.cdn.Cloudflare
+    cluster: delivery
+  - id: terminal
+    label: "No publish\nrejected, duplicate, needs review, failed"
+    cluster: delivery
+edges:
+  - from: adhoc
+    to: lease
+    label: immediate dry run or publish
+  - from: alerts
+    to: queue
+    label: parse, score, select
+  - from: queue
+    to: lease
+    label: worker claims next due job
+  - from: lease
+    to: scrape
+  - from: scrape
+    to: dedupe
+    label: valid source packet
+  - from: dedupe
+    to: draft
+    label: target article and evidence
+  - from: draft
+    to: critic
+    label: JSON plan
+  - from: critic
+    to: gates
+    label: revised plan
+  - from: gates
+    to: worktree
+    label: all gates pass
+  - from: worktree
+    to: pr
+    label: publish flag only
+  - from: pr
+    to: review
+  - from: review
+    to: site
+    label: approved and merged
+  - from: scrape
+    to: terminal
+    label: invalid or insufficient packet
+    style: dashed
+  - from: dedupe
+    to: terminal
+    label: duplicate or no safe match
+    style: dashed
+  - from: gates
+    to: terminal
+    label: validation outcome
+    style: dashed
