@@ -123,7 +123,9 @@ Both return issues from fixed code sets with `warning`, `review`, or `blocking`
 severity. Every objection must include an exact contiguous quotation from the
 source or selected target page; `wrong_target_page` requires both. Unknown
 codes, non-exact quotations, and self-contradictory findings are preserved as
-rejected critic findings but cannot gate the draft. Safety findings such as
+rejected critic findings but cannot gate the draft. Draft PRs display them under
+**Rejected critic observations (non-blocking)** with their validation errors,
+separate from authoritative validated findings. Safety findings such as
 study-type inflation are promoted to at least `review` severity. The publisher,
 not the model, derives approval from the validated issues. Deterministic code
 remains authoritative for literal source containment, near-verbatim similarity,
