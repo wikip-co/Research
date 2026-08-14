@@ -27,7 +27,7 @@ clusters:
       color: "#c2410c"
 nodes:
   - id: adhoc
-    label: "Ad-hoc URL\nlocal-publish URL"
+    label: "Ad-hoc URL\nlocal-publish URL --domain DOMAIN"
     icon: onprem.client.User
     cluster: intake
   - id: alerts
@@ -47,11 +47,11 @@ nodes:
     icon: programming.language.Python
     cluster: deterministic
   - id: dedupe
-    label: "DOI and URL dedupe\nhybrid topic match"
+    label: "Canonical DOI/URL dedupe\ndomain + title/stem entity retrieval"
     icon: onprem.vcs.Git
     cluster: deterministic
   - id: draft
-    label: "Draft pass\nstructured publication plan"
+    label: "Integrated draft\ndirect + background, multi-page/new-page plan"
     icon: programming.language.Python
     cluster: judgment
   - id: mode
@@ -70,7 +70,7 @@ nodes:
     icon: onprem.security.Vault
     cluster: deterministic
   - id: worktree
-    label: "Isolated content worktree\ncreated from origin/main"
+    label: "Isolated content worktree\nvalidated existing and new Markdown files"
     icon: onprem.vcs.Git
     cluster: delivery
   - id: pr
@@ -86,7 +86,11 @@ nodes:
     icon: saas.cdn.Cloudflare
     cluster: delivery
   - id: terminal
-    label: "No publish\nrejected, duplicate, needs review, failed"
+    label: "No publish\nvalidated dry run, duplicate, needs review, failed"
+    cluster: delivery
+  - id: artifacts
+    label: "Immutable run directory\nsource, packet, report, patch + telemetry"
+    icon: generic.storage.Storage
     cluster: delivery
 edges:
   - from: adhoc
@@ -128,6 +132,10 @@ edges:
   - from: gates
     to: worktree
     label: all gates pass
+  - from: gates
+    to: artifacts
+    label: record attempts and outcome
+    style: dashed
   - from: worktree
     to: pr
     label: publish flag only
@@ -142,7 +150,7 @@ edges:
     style: dashed
   - from: dedupe
     to: terminal
-    label: duplicate or no safe match
+    label: duplicate or no safe plan
     style: dashed
   - from: gates
     to: terminal

@@ -34,7 +34,7 @@ nodes:
     label: "append / publish\nmanual authoring path"
     cluster: commands
   - id: local_cmds
-    label: "local-publish / enqueue-local\nenqueue-local-backlog / local-worker"
+    label: "local-publish --domain / enqueue-local\nenqueue-local-backlog / local-worker / requeue-local"
     cluster: commands
   - id: media_cmds
     label: "image and capture commands\nnew-article media"
@@ -64,7 +64,7 @@ nodes:
     icon: generic.database.SQL
     cluster: outputs
   - id: packet
-    label: "research packet\nJSON and archived provenance"
+    label: "immutable run directory\nsource, packet, report, patch telemetry"
     icon: generic.storage.Storage
     cluster: outputs
   - id: patch

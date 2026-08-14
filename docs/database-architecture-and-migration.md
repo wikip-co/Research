@@ -1,19 +1,20 @@
 # Database Architecture and Migration Plan
 
 Status: SQLite production path implemented; PostgreSQL migration remains optional
-Originally assessed: 2026-05-11; updated: 2026-08-09
+Originally assessed: 2026-05-11; updated: 2026-08-14
 
 ## Current State
 
 The research intake and local publication queue use one SQLite primary on
 `iconium`. The implementation now includes:
 
-- `messages` and `articles` for Gmail/Scholar intake and triage;
-- `papers` and `article_papers` for canonical identity and occurrence links;
+- `messages` and domain-aware `articles` for Gmail/Scholar intake and triage;
+- `papers` for canonical identity, linked directly from `articles.paper_key`;
 - `article_jobs` and `article_job_items` for the legacy triage/Codex path;
-- `publication_jobs` and `publication_job_events` for durable local-model jobs,
-  atomic leases, retries, terminal outcomes, and an append-only audit trail;
-- active-job uniqueness by source URL and article key; and
+- `publication_jobs` and `publication_job_events` for durable domain/policy-aware
+  local-model jobs, atomic leases, exponential retry scheduling, immutable run
+  pointers, stopped dry-run outcomes, and an append-only audit trail;
+- active-job uniqueness by canonical source URL and article key; and
 - nightly online backups, integrity checks, dated retention, and a NAS `latest`
   snapshot.
 

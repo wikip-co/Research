@@ -31,15 +31,11 @@ nodes:
     icon: generic.database.SQL
     cluster: intake
   - id: articles
-    label: "articles\nURL, score, triage status, processed_at"
+    label: "articles\ndomain, URL, score, triage, paper_key"
     icon: generic.database.SQL
     cluster: intake
   - id: papers
     label: "papers\ncanonical DOI/URL, workflow state, PR"
-    icon: generic.database.SQL
-    cluster: canonical
-  - id: article_papers
-    label: "article_papers\nintake-to-canonical linkage"
     icon: generic.database.SQL
     cluster: canonical
   - id: article_jobs
@@ -51,7 +47,7 @@ nodes:
     icon: generic.database.SQL
     cluster: legacy
   - id: publication_jobs
-    label: "publication_jobs\ndurable local queue, leases, attempts, outcome"
+    label: "publication_jobs\ndomain, canonical URL, policy, retry schedule, run ID"
     icon: generic.database.SQL
     cluster: local
   - id: publication_events
@@ -67,11 +63,8 @@ edges:
     to: articles
     label: one alert yields many candidates
   - from: articles
-    to: article_papers
-    label: links intake records
-  - from: papers
-    to: article_papers
-    label: canonical identity
+    to: papers
+    label: optional direct paper_key
   - from: article_jobs
     to: article_job_items
     label: contains

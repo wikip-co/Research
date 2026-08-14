@@ -31,19 +31,19 @@ nodes:
     label: "Reference gate\nDOI/URL not already cited"
     cluster: source
   - id: match
-    label: "Placement gate\nconfident existing Natural Healing target"
+    label: "Domain/entity gate\neligible existing page or safe new entity path"
     cluster: source
   - id: quotes
     label: "Near-verbatim gate\neach bullet grounded in source quotation"
     cluster: evidence
   - id: claims
-    label: "Claim-strength gate\nstudy design, species, and limits preserved"
+    label: "Integrated provenance gate\ndirect/background origin, references, scope, limits"
     cluster: evidence
   - id: mode
     label: "Critic mode\nrequired (default), advisory, or off"
     cluster: evidence
   - id: placement
-    label: "Placement review\nselected target Markdown + candidate metadata"
+    label: "Placement review\nper existing page or proposed new path/category"
     cluster: evidence
   - id: evidencecritic
     label: "Evidence review\nsupport, scope, overclaim, limitations"
@@ -52,16 +52,16 @@ nodes:
     label: "Critic evidence gate\nfixed codes, severity, exact quotes, no contradictions"
     cluster: evidence
   - id: override
-    label: "Audited ad-hoc override\nhuman reason; never available to worker"
+    label: "Audit-only override request\nrecorded reason; never bypasses rejection"
     cluster: evidence
   - id: style
-    label: "Style gate\nauthoritative Natural Healing guide"
+    label: "Style gate\ngeneral guide + selected-domain guide"
     cluster: repo
   - id: render
     label: "Render gate\nfrontmatter, headings, footnotes, Markdown"
     cluster: repo
   - id: git
-    label: "Git scope gate\nonly intended content file changes"
+    label: "Git scope gate\nonly intended existing/new Markdown changes"
     cluster: repo
   - id: pass
     label: "Validated output\nrequired may draft-PR; advisory/off patch only"
@@ -98,10 +98,11 @@ edges:
     label: approved or advisory
   - from: criticvalidation
     to: override
-    label: "required rejection + explicit human reason"
+    label: "optional audit record"
     style: dashed
   - from: override
-    to: style
+    to: stop
+    label: rejection remains gating
   - from: mode
     to: style
     label: off; manual dry-run

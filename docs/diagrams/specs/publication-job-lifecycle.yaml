@@ -50,6 +50,10 @@ nodes:
     label: "needs_review\nhuman decision required"
     icon: onprem.client.User
     cluster: outcomes
+  - id: validated
+    label: "validated\ndry-run gates passed"
+    icon: onprem.client.User
+    cluster: outcomes
   - id: rejected
     label: "rejected\ninsufficient or unsafe evidence"
     cluster: outcomes
@@ -57,7 +61,7 @@ nodes:
     label: "duplicate\nalready cited or already queued"
     cluster: outcomes
   - id: retry
-    label: "retry_wait\nattempt count and next_run_at"
+    label: "retry_wait\n5m exponential delay, capped at 6h"
     cluster: ready
   - id: failed
     label: "failed\nretry budget exhausted"
@@ -82,8 +86,12 @@ edges:
     to: publishing
     label: publish mode
   - from: validating
-    to: needs_review
+    to: validated
     label: safe dry-run result
+    style: dashed
+  - from: validating
+    to: needs_review
+    label: quality or placement decision
     style: dashed
   - from: publishing
     to: pr_open
@@ -110,6 +118,18 @@ edges:
   - from: retry
     to: failed
     label: attempts exhausted
+  - from: validated
+    to: queued
+    label: explicit requeue + reason
+    style: dashed
+  - from: needs_review
+    to: queued
+    label: repaired + explicit requeue
+    style: dashed
+  - from: failed
+    to: queued
+    label: repaired + explicit requeue
+    style: dashed
   - from: queued
     to: events
     label: every transition recorded

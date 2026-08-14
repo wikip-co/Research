@@ -18,8 +18,8 @@ The [architecture diagram gallery](diagrams/README.md) also covers the upstream 
 ## End-to-end flow
 
 1. An ad-hoc URL or leased database job is scraped into a validated research packet.
-2. The local llama.cpp model produces a structured draft plus separate grounded placement and evidence reviews; deterministic gates validate citation metadata, exact/near-verbatim evidence, preclinical scope, rendering, and Git scope.
-3. Publication mode commits only the intended Markdown change from an isolated `origin/main` worktree and opens a draft PR in `content`.
+2. The local llama.cpp model produces an integrated direct/background draft across compatible existing pages and, when warranted, a new entity page; separate grounded placement and evidence reviews plus deterministic gates validate citation metadata, exact/near-verbatim evidence, provenance, preclinical scope, rendering, and Git scope.
+3. Publication mode commits only the intended Markdown changes from an isolated `origin/main` worktree and opens a draft PR in `content`.
 4. A human reviews and merges the content PR.
 5. After merge to `content/main`, `trigger-sites.yml` sends a `content-updated` repository dispatch containing the exact content SHA.
 6. `wikip.co/.github/workflows/generator.yml` checks out the site, that content SHA with full history, and `wikip-co/public` as separate build inputs.

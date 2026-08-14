@@ -67,7 +67,7 @@ nodes:
     icon: generic.database.SQL
     cluster: state
   - id: packets
-    label: "Ignored runtime packets\nscrapes and source archives"
+    label: "Ignored immutable run artifacts\nsources, packets, reports, patches"
     icon: generic.storage.Storage
     cluster: state
   - id: content
@@ -129,7 +129,7 @@ edges:
     label: validated packet
   - from: local_worker
     to: wiki
-    label: match, validate, worktree, PR
+    label: domain retrieval, create/update, validate, PR
   - from: local_worker
     to: local_llm
     label: sequential draft and critic
