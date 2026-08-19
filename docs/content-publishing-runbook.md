@@ -18,7 +18,7 @@ The [architecture diagram gallery](diagrams/README.md) also covers the upstream 
 ## End-to-end flow
 
 1. An ad-hoc URL or leased database job is scraped into a validated research packet.
-2. One bounded local llama.cpp pass extracts the paper's direct results plus background/traditional healing uses and maps them across compatible existing pages or, when warranted, a new entity page; deterministic gates validate citation metadata, exact/near-verbatim evidence, entity placement, preclinical scope, rendering, and Git scope. Every claim cites only the main scraped article.
+2. One bounded drafting pass—local llama.cpp by default, or an explicitly selected write-restricted Codex/Claude/Grok CLI—extracts the paper's direct results plus background/traditional healing uses and maps them across compatible existing pages or, when warranted, a new entity page. Deterministic gates validate citation metadata, exact/near-verbatim evidence, entity placement, species/model scope, property-specific headings, rendering, and Git scope. Every claim cites only the main scraped article.
 3. Publication mode commits only the intended Markdown changes from an isolated `origin/main` worktree and opens a draft PR in `content`.
 4. A human reviews and merges the content PR.
 5. After merge to `content/main`, `trigger-sites.yml` sends a `content-updated` repository dispatch containing the exact content SHA.

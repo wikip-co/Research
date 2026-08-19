@@ -77,9 +77,10 @@ tags:
   - `### Antimicrobial`
     - `#### Antiviral`
     - `#### Antibacterial`
-- **Evidence tiers**: never place bullets directly under `## Healing Properties`. Animal findings go under `### Preclinical Evidence (Animal Studies)` with the animal-evidence warning blockquote scoped to that subsection only; background/human facts go under property-named subsections without the warning.
+- **Property subsections**: never place bullets directly under `## Healing Properties`. Put every bullet under a concise property-named `###` subsection such as `### Glycemic Control`, `### Lipid Metabolism`, `### Blood Pressure`, or `### Carotenoid Content`, regardless of evidence tier.
 - **Species scope**: every animal-evidence bullet must contain a species or model cue in its own text, or open with the standardized prefix `In <model>, ` (e.g. `In fructose-fed rats, `).
-- **Formulation definition**: when findings concern a specific formulation rather than the entity generally, open the subsection with one near-verbatim line defining that formulation before any finding cites it.
+- **Study thesis / formulation context**: when the paper provides a concise objective or thesis describing the studied formulation, a single cited near-verbatim sentence may appear directly below `## Healing Properties`, before the property subsections. Keep the animal model explicit in that sentence.
+- **Evidence limits**: preserve study design and species in each claim. A generic warning blockquote is not required when every non-human claim is individually scoped.
 - **Methods statements** (how a product was produced or assessed) are not healing-property claims; keep them out of effect bullets — the formulation-definition line may carry that context.
 
 ### 3. `## Disease / Symptom Treatment`

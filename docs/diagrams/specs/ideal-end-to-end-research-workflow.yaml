@@ -64,7 +64,7 @@ nodes:
     icon: saas.media.Cloudinary
     cluster: author
   - id: lint
-    label: "One local-model pass\nresults + background mapped to wiki"
+    label: "One drafting pass\nlocal default or read-only agent CLI"
     icon: programming.language.Python
     cluster: author
   - id: gates

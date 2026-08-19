@@ -102,6 +102,10 @@ nodes:
     label: "llama.cpp local API\none extraction/placement call"
     icon: onprem.compute.Server
     cluster: integrations
+  - id: agent_cli
+    label: "Codex / Claude / Grok CLI\noptional write-restricted planning call"
+    icon: programming.language.Python
+    cluster: integrations
 edges:
   - from: wrapper
     to: gmail_reader
@@ -132,7 +136,10 @@ edges:
     label: domain retrieval, create/update, validate, PR
   - from: local_worker
     to: local_llm
-    label: locked single model pass
+    label: local default; locked single pass
+  - from: local_worker
+    to: agent_cli
+    label: explicit backend; no write authority
   - from: core
     to: scraper
     label: shared helpers

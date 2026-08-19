@@ -1,7 +1,7 @@
 # Research Production Operations
 
 This is the canonical operator guide for the Research workspace on `iconium`.
-It covers intake, scraping, local-model authoring, database queues, draft pull
+It covers intake, scraping, single-pass model authoring, database queues, draft pull
 requests, services, backups, and downstream site publication.
 
 The production publisher is deliberately fail-closed. Its unattended unit can
@@ -17,13 +17,18 @@ There are two intake paths and one guarded publication pipeline:
   enqueue them, and let `local-worker` claim one due job at a time.
 
 Both paths scrape and validate a research packet, deduplicate and match the
-source, make one bounded local-model call that extracts core results plus
+source, make one bounded drafting call that extracts core results plus
 background/traditional healing uses and maps them to wiki targets, run
 deterministic quality gates, and prepare an isolated content patch. The model
 may choose compatible existing pages or a focused entity page below the
 explicitly selected domain. A draft PR is possible only with `--publish`.
 
-![Local LLM Research Publisher production flow](diagrams/rendered/local-publisher-production-flow.svg)
+llama.cpp is the default drafting backend. An operator may explicitly select an
+installed and authenticated Codex, Claude, or Grok CLI for that same one-pass
+JSON plan; the agent receives no write authority, while the publisher retains
+all content and Git authority.
+
+![Single-pass Research Publisher production flow](diagrams/rendered/local-publisher-production-flow.svg)
 
 Repository responsibilities remain separate:
 
@@ -127,31 +132,38 @@ main scraped article. Earlier works mentioned by that article are not followed
 or linked. Exact source quotations remain in adjacent HTML provenance comments
 for PR review.
 
+Under `## Healing Properties`, the source-supported study thesis may appear as
+one cited paragraph before the subsections. Every finding then belongs under a
+property-specific `###` heading such as Glycemic Control, Lipid Metabolism,
+Blood Pressure, Vitamin A Status, Nutrient Composition, or Carotenoid Content.
+Animal claims retain the species/model in each claim; the renderer does not add
+a generic preclinical-warning blockquote.
+
 The former multi-pass planner, placement/evidence critics, and balance repair
 remain available only through `--pipeline legacy` to reproduce older reports.
 Legacy critic flags do not alter the default `simple` path.
 
 ## Current iconium runtime
 
-Observed on 2026-08-14:
+Observed on 2026-08-19:
 
 | Component | State | Address or schedule | Purpose |
 | --- | --- | --- | --- |
 | `research-triage-ui.service` | active | local/LAN port `8765` | curate intake rows and run the legacy Codex path |
-| `qwen-moe-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible extraction/placement API |
+| `qwen38-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible extraction/placement API |
 | `research-flaresolverr` | active Podman container | `127.0.0.1:8191` | browser/anti-bot retrieval fallback |
 | `research-db-backup.timer` | enabled | nightly around 03:30 | online SQLite backup and NAS integrity check |
 | `research-scholar-sync.timer` | not installed | template: every 30 minutes | passive Gmail alert ingestion |
 | `research-local-publisher.timer` | not installed | template: every 15 minutes | enqueue and process one queued article |
 
-The active model was `qwen3.6-35b-a3b-q8_0-mtp` in a rootless Toolbx
-`llama-rocm-7.2.4`, with a 262,144-token context, Q8 KV cache, full GPU
+The active model was `qwen3.8-27b-q8_0-mtp` in a rootless Toolbx
+`llama-rocm-7.14`, with a 262,144-token context, Q8 KV cache, full GPU
 offload, MTP, and `-np 1`. Other Qwen/Gemma systemd model units also bind port
 8080 and are mutually exclusive. The authoritative model-service
 administration belongs to `~/iconium-llm-stack`; always stop the active unit
 before starting another port-8080 unit.
 
-![Local llama.cpp integration](diagrams/rendered/local-llm-stack-integration.svg)
+![Drafting backend integration](diagrams/rendered/local-llm-stack-integration.svg)
 
 Because the active llama server uses `-np 1`, the publisher takes an OS lock
 before its model request. An overlapping run fails quickly as
@@ -176,7 +188,7 @@ Inspect logs without following indefinitely:
 ```bash
 journalctl --user -u research-triage-ui.service -n 100 --no-pager
 journalctl --user -u research-db-backup.service -n 100 --no-pager
-journalctl --user -u qwen-moe-server-q8.service -n 100 --no-pager
+journalctl --user -u qwen38-server-q8.service -n 100 --no-pager
 ```
 
 After the optional timers are installed, use the same commands with
@@ -190,7 +202,7 @@ The important environment defaults are:
 GMAIL_READER_DB=~/Research/research-tools/gmail-reader/data/scholar-alerts.db
 CONTENT_REPO_ROOT=~/Research/content
 LOCAL_LLM_BASE_URL=http://127.0.0.1:8080/v1
-LOCAL_LLM_MODEL=qwen3.6-35b-a3b-q8_0-mtp
+LOCAL_LLM_MODEL=qwen3.8-27b-q8_0-mtp
 ```
 
 The tracked examples and unit templates use absolute `/home/anthony/Research`
@@ -243,6 +255,30 @@ PR, add `--allow-duplicate-pr`. This requires `--publish`, preserves the
 duplicate evidence in the immutable report and new PR body, and bypasses only
 the duplicate stop—not source, evidence, render, or Git gates.
 
+### Optional frontier-agent drafting
+
+The local backend remains the no-flag default. To use credits from an installed
+and authenticated agent CLI, choose it explicitly:
+
+```bash
+./agent-workflow local-publish URL --domain 'Natural Healing' \
+  --backend codex --model MODEL_ID --publish
+
+./agent-workflow local-publish URL --domain 'Natural Healing' \
+  --backend claude --model MODEL_ID --publish
+
+./agent-workflow local-publish URL --domain 'Natural Healing' \
+  --backend grok --model MODEL_ID --publish
+```
+
+Omitting `--model` uses the selected CLI's configured default. `CODEX_BIN`,
+`CLAUDE_BIN`, and `GROK_BIN` can override executable discovery. These backends
+work only with `--pipeline simple`; `--base-url` is local-only. They receive the
+same bounded evidence prompt and cannot edit files or perform Git/GitHub
+actions. Claude and Grok have tools disabled (and Grok web search disabled);
+Codex uses its read-only sandbox. Their final text is parsed as the one JSON
+plan and then passes the same deterministic gates.
+
 ### Compatibility pipeline
 
 The command defaults to `--pipeline simple`; no extra flag is necessary.
@@ -293,7 +329,9 @@ and an append-only event history. Active canonical-source and active-article
 uniqueness indexes prevent URL variants of the same candidate from being
 enqueued twice.
 
-`local-worker` also defaults to the single-pass pipeline. `--pipeline legacy`
+`local-worker` also defaults to the single-pass pipeline and local llama.cpp
+backend. A bounded operator-run worker may explicitly select an agent backend,
+which can consume that CLI account's credits. `--pipeline legacy`
 is available for controlled compatibility testing; critic overrides remain
 prohibited in the passive worker.
 

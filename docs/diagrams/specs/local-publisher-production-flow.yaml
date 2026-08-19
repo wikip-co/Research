@@ -1,4 +1,4 @@
-title: Local LLM Research Publisher Production Flow
+title: Single-pass Research Publisher Production Flow
 direction: LR
 graph_attr:
   ranksep: "1.0"
@@ -16,7 +16,7 @@ clusters:
       bgcolor: "#f0fdf4"
       color: "#15803d"
   - id: judgment
-    label: Single local-model pass
+    label: Single drafting pass
     graph_attr:
       bgcolor: "#f5f3ff"
       color: "#7c3aed"
@@ -54,9 +54,15 @@ nodes:
     label: "Domain/entity retrieval\nexisting pages + safe new-page seed"
     icon: programming.language.Python
     cluster: deterministic
-  - id: lock
-    label: "Single-slot model lock\nfail fast on overlap"
+  - id: backend
+    label: "Draft backend selector\nlocal default; agent explicit"
     cluster: deterministic
+  - id: lock
+    label: "llama.cpp model lock\nlocal backend only"
+    cluster: deterministic
+  - id: agent
+    label: "Codex / Claude / Grok CLI\nno write or publish authority"
+    cluster: judgment
   - id: prompt
     label: "Bounded evidence context\nresults + background; no reference list"
     cluster: judgment
@@ -109,8 +115,16 @@ edges:
     to: match
     label: new source or explicit A/B bypass
   - from: match
+    to: backend
+  - from: backend
     to: lock
+    label: local default
+  - from: backend
+    to: agent
+    label: explicit frontier CLI
   - from: lock
+    to: prompt
+  - from: agent
     to: prompt
   - from: prompt
     to: draft
@@ -143,7 +157,7 @@ edges:
     style: dashed
   - from: lock
     to: terminal
-    label: model busy
+    label: local model busy
     style: dashed
   - from: gates
     to: terminal
