@@ -77,6 +77,10 @@ tags:
   - `### Antimicrobial`
     - `#### Antiviral`
     - `#### Antibacterial`
+- **Evidence tiers**: never place bullets directly under `## Healing Properties`. Animal findings go under `### Preclinical Evidence (Animal Studies)` with the animal-evidence warning blockquote scoped to that subsection only; background/human facts go under property-named subsections without the warning.
+- **Species scope**: every animal-evidence bullet must contain a species or model cue in its own text, or open with the standardized prefix `In <model>, ` (e.g. `In fructose-fed rats, `).
+- **Formulation definition**: when findings concern a specific formulation rather than the entity generally, open the subsection with one near-verbatim line defining that formulation before any finding cites it.
+- **Methods statements** (how a product was produced or assessed) are not healing-property claims; keep them out of effect bullets — the formulation-definition line may carry that context.
 
 ### 3. `## Disease / Symptom Treatment`
 - Create one `### Condition Name` per disease or symptom.
@@ -100,7 +104,7 @@ Place all references at the bottom of the file using footnote style.
 ```markdown
 [^1]: **Title:** [Full Paper Title](https://doi.org/...)
 **Publication:** [Journal or Site Name](url)
-**Date:** YYYY
+**Date:** YYYY-MM-DD
 **Study Type:** Human Study / Animal Study / Review / Meta Analysis / In Vitro
 **Author(s):**
 **Institution(s):**
@@ -110,8 +114,11 @@ Place all references at the bottom of the file using footnote style.
 
 **Rules:**
 - Attach `[^n]` at the end of **every** bullet point.
+- Cite each unique source with exactly **one** footnote: every bullet drawn from the same paper reuses the same `[^n]`. Never repeat a paper's bibliographic block.
+- Dates use `YYYY-MM-DD`; when the source publishes only a partial date, use `YYYY-MM` or `YYYY`.
 - Preserve original scientific phrasing as closely as possible.
 - Include IPFS archive links when available.
+- Never link source-internal fragment anchors (e.g. `(#bb0010)` from publisher pages); cite earlier works as plain text, linking their DOI when known.
 
 ---
 
