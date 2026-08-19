@@ -90,7 +90,7 @@ edges:
     label: draft content PR
   - from: research_tools
     to: local_llm
-    label: draft and critic requests
+    label: one extraction/placement request
   - from: research_tools
     to: cloudinary
     label: uploads media

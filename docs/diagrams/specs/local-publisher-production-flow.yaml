@@ -16,7 +16,7 @@ clusters:
       bgcolor: "#f0fdf4"
       color: "#15803d"
   - id: judgment
-    label: Local model judgment
+    label: Single local-model pass
     graph_attr:
       bgcolor: "#f5f3ff"
       color: "#7c3aed"
@@ -39,7 +39,7 @@ nodes:
     icon: generic.database.SQL
     cluster: intake
   - id: lease
-    label: "Atomic lease\none worker owns one job"
+    label: "Atomic job lease\none worker owns one job"
     icon: programming.language.Python
     cluster: deterministic
   - id: scrape
@@ -47,30 +47,29 @@ nodes:
     icon: programming.language.Python
     cluster: deterministic
   - id: dedupe
-    label: "Canonical DOI/URL dedupe\ndomain + title/stem entity retrieval"
+    label: "DOI/URL duplicate check\nbase, paper state, and open PRs\n(explicit A/B bypass available)"
     icon: onprem.vcs.Git
     cluster: deterministic
+  - id: match
+    label: "Domain/entity retrieval\nexisting pages + safe new-page seed"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: lock
+    label: "Single-slot model lock\nfail fast on overlap"
+    cluster: deterministic
+  - id: prompt
+    label: "Bounded evidence context\nresults + background; no reference list"
+    cluster: judgment
   - id: draft
-    label: "Integrated draft\ndirect + background, multi-page/new-page plan"
-    icon: programming.language.Python
-    cluster: judgment
-  - id: mode
-    label: "Critic mode\nrequired, advisory, or off"
-    cluster: judgment
-  - id: placement
-    label: "Placement critic\ntarget page and heading"
-    icon: programming.language.Python
-    cluster: judgment
-  - id: evidence
-    label: "Evidence critic\nsupport, scope, and limits"
+    label: "One JSON response\nextract claims and map wiki targets"
     icon: programming.language.Python
     cluster: judgment
   - id: gates
-    label: "Hard validators\npacket, quote, claim, render, Git scope"
+    label: "Deterministic validators\nquote, entity, evidence, render, Git scope"
     icon: onprem.security.Vault
     cluster: deterministic
   - id: worktree
-    label: "Isolated content worktree\nvalidated existing and new Markdown files"
+    label: "Isolated content worktree\nvalidated Markdown only"
     icon: onprem.vcs.Git
     cluster: delivery
   - id: pr
@@ -86,7 +85,7 @@ nodes:
     icon: saas.cdn.Cloudflare
     cluster: delivery
   - id: terminal
-    label: "No publish\nvalidated dry run, duplicate, needs review, failed"
+    label: "No publish\nduplicate, needs review, busy, or failed"
     cluster: delivery
   - id: artifacts
     label: "Immutable run directory\nsource, packet, report, patch + telemetry"
@@ -106,35 +105,25 @@ edges:
     to: scrape
   - from: scrape
     to: dedupe
-    label: valid source packet
   - from: dedupe
+    to: match
+    label: new source or explicit A/B bypass
+  - from: match
+    to: lock
+  - from: lock
+    to: prompt
+  - from: prompt
     to: draft
-    label: target article and evidence
+    label: one request
   - from: draft
-    to: mode
-    label: JSON plan
-  - from: mode
-    to: placement
-    label: "required/advisory + selected target"
-  - from: mode
-    to: evidence
-    label: "required/advisory + source packet"
-  - from: mode
     to: gates
-    label: off; manual patch only
-    style: dashed
-  - from: placement
-    to: gates
-    label: quoted fixed-code issues
-  - from: evidence
-    to: gates
-    label: quoted fixed-code issues
+    label: one extraction/placement plan
   - from: gates
     to: worktree
     label: all gates pass
   - from: gates
     to: artifacts
-    label: record attempts and outcome
+    label: record plan and outcome
     style: dashed
   - from: worktree
     to: pr
@@ -146,11 +135,15 @@ edges:
     label: approved and merged
   - from: scrape
     to: terminal
-    label: invalid or insufficient packet
+    label: invalid packet
     style: dashed
   - from: dedupe
     to: terminal
-    label: duplicate or no safe plan
+    label: already cited or open PR (default)
+    style: dashed
+  - from: lock
+    to: terminal
+    label: model busy
     style: dashed
   - from: gates
     to: terminal

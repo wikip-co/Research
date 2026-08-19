@@ -144,7 +144,7 @@ edges:
     label: leases durable job
   - from: local_worker
     to: llm_service
-    label: draft and critic
+    label: locked single extraction pass
   - from: llm_service
     to: llama_toolbox
     label: starts runtime

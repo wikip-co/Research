@@ -1,4 +1,4 @@
-title: Local Publisher Quality Gates and Fail-Closed Decisions
+title: Local Publisher Deterministic Quality Gates
 direction: LR
 graph_attr:
   ranksep: "0.95"
@@ -6,12 +6,12 @@ graph_attr:
   pad: "0.5"
 clusters:
   - id: source
-    label: Source identity and sufficiency
+    label: Source identity and in-flight state
     graph_attr:
       bgcolor: "#eff6ff"
       color: "#2563eb"
   - id: evidence
-    label: Evidence-faithful authoring
+    label: Evidence-faithful single-pass plan
     graph_attr:
       bgcolor: "#f5f3ff"
       color: "#7c3aed"
@@ -22,53 +22,47 @@ clusters:
       color: "#15803d"
 nodes:
   - id: packet
-    label: "Packet gate\nnot CAPTCHA/error; meaningful abstract or text"
+    label: "Packet gate\nnot CAPTCHA/error; sufficient article text"
     cluster: source
   - id: identity
-    label: "Identity gate\nDOI and title agree across sources"
+    label: "Identity gate\nDOI, title, and citation metadata agree"
     cluster: source
   - id: duplicate
-    label: "Reference gate\nDOI/URL not already cited"
+    label: "Duplicate gate\nbase content + paper state + open PR heads\nexplicit A/B bypass is audited"
+    cluster: source
+  - id: lock
+    label: "Concurrency gate\none publisher owns the model slot"
     cluster: source
   - id: match
-    label: "Domain/entity gate\neligible existing page or safe new entity path"
-    cluster: source
+    label: "Domain/entity gate\ncompatible page or safe new path"
+    cluster: evidence
   - id: quotes
-    label: "Near-verbatim gate\neach bullet grounded in source quotation"
+    label: "Exact/near-verbatim gate\neach bullet grounded in this article"
     cluster: evidence
   - id: claims
-    label: "Integrated provenance gate\ndirect/background origin, references, scope, limits"
+    label: "Evidence gate\ndirect/background origin, species, scope, limits"
     cluster: evidence
-  - id: mode
-    label: "Critic mode\nrequired (default), advisory, or off"
+  - id: citations
+    label: "Citation gate\none shared main-article footnote; no external refs"
     cluster: evidence
-  - id: placement
-    label: "Placement review\nper existing page or proposed new path/category"
-    cluster: evidence
-  - id: evidencecritic
-    label: "Evidence review\nsupport, scope, overclaim, limitations"
-    cluster: evidence
-  - id: criticvalidation
-    label: "Critic evidence gate\nfixed codes, severity, exact quotes, no contradictions"
-    cluster: evidence
-  - id: override
-    label: "Audit-only override request\nrecorded reason; never bypasses rejection"
+  - id: newpage
+    label: "New-page gate\ndefinition lead, entity tag, category rationale"
     cluster: evidence
   - id: style
-    label: "Style gate\ngeneral guide + selected-domain guide"
+    label: "Style gate\nNatural Healing bullet and evidence structure"
     cluster: repo
   - id: render
-    label: "Render gate\nfrontmatter, headings, footnotes, Markdown"
+    label: "Render gate\nfrontmatter, headings, footnote, Markdown"
     cluster: repo
   - id: git
-    label: "Git scope gate\nonly intended existing/new Markdown changes"
+    label: "Git scope gate\nonly intended Markdown changes"
     cluster: repo
   - id: pass
-    label: "Validated output\nrequired may draft-PR; advisory/off patch only"
+    label: "Validated output\ndry-run patch or draft PR"
     icon: onprem.vcs.Github
     cluster: repo
   - id: stop
-    label: "Fail closed\nrejected, duplicate, needs review, or retry"
+    label: "Fail closed\nduplicate, busy, needs review, or retry"
     cluster: repo
 edges:
   - from: packet
@@ -76,37 +70,24 @@ edges:
   - from: identity
     to: duplicate
   - from: duplicate
+    to: lock
+    label: pass or explicit A/B bypass
+  - from: lock
     to: match
   - from: match
     to: quotes
   - from: quotes
     to: claims
   - from: claims
-    to: mode
-  - from: mode
-    to: placement
-    label: required or advisory
-  - from: mode
-    to: evidencecritic
-    label: required or advisory
-  - from: placement
-    to: criticvalidation
-  - from: evidencecritic
-    to: criticvalidation
-  - from: criticvalidation
+    to: citations
+  - from: citations
+    to: newpage
+    label: when creating a page
+  - from: citations
     to: style
-    label: approved or advisory
-  - from: criticvalidation
-    to: override
-    label: "optional audit record"
-    style: dashed
-  - from: override
-    to: stop
-    label: rejection remains gating
-  - from: mode
+    label: existing-page update
+  - from: newpage
     to: style
-    label: off; manual dry-run
-    style: dashed
   - from: style
     to: render
   - from: render
@@ -123,13 +104,22 @@ edges:
   - from: duplicate
     to: stop
     style: dashed
+  - from: lock
+    to: stop
+    style: dashed
   - from: match
+    to: stop
+    style: dashed
+  - from: quotes
     to: stop
     style: dashed
   - from: claims
     to: stop
     style: dashed
-  - from: criticvalidation
+  - from: citations
+    to: stop
+    style: dashed
+  - from: newpage
     to: stop
     style: dashed
   - from: render

@@ -99,7 +99,7 @@ nodes:
     icon: onprem.vcs.Github
     cluster: integrations
   - id: local_llm
-    label: "llama.cpp local API\ndraft and critic judgment"
+    label: "llama.cpp local API\none extraction/placement call"
     icon: onprem.compute.Server
     cluster: integrations
 edges:
@@ -132,7 +132,7 @@ edges:
     label: domain retrieval, create/update, validate, PR
   - from: local_worker
     to: local_llm
-    label: sequential draft and critic
+    label: locked single model pass
   - from: core
     to: scraper
     label: shared helpers

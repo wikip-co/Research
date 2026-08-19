@@ -30,14 +30,14 @@ nodes:
     label: "local_publish.py\ndeterministic orchestration"
     icon: programming.language.Python
     cluster: research
-  - id: draft
-    label: "Draft request\nstructured JSON, thinking disabled"
+  - id: lock
+    label: "Publisher model lock\none owner; fail fast on overlap"
     cluster: research
-  - id: placement
-    label: "Placement review\nsecond sequential request"
+  - id: prompt
+    label: "Bounded evidence prompt\nresults + background, no references"
     cluster: research
-  - id: evidence
-    label: "Evidence review\nthird sequential request"
+  - id: response
+    label: "One JSON response\nclaim extraction + wiki placement"
     cluster: research
   - id: endpoint
     label: "localhost port 8080\nOpenAI /v1 Chat Completions"
@@ -69,22 +69,18 @@ nodes:
     cluster: api
 edges:
   - from: orchestrator
-    to: draft
-  - from: draft
+    to: lock
+  - from: lock
+    to: prompt
+  - from: prompt
     to: endpoint
-    label: first request
+    label: one request; thinking disabled
   - from: endpoint
-    to: placement
-    label: draft JSON returned
-  - from: placement
-    to: endpoint
-    label: second request
-  - from: endpoint
-    to: evidence
-    label: placement JSON returned
-  - from: evidence
-    to: endpoint
-    label: third request
+    to: response
+    label: structured plan returned
+  - from: response
+    to: orchestrator
+    label: deterministic validation
   - from: config
     to: orchestrator
     label: LOCAL_LLM variables

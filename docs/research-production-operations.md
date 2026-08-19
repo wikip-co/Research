@@ -17,12 +17,11 @@ There are two intake paths and one guarded publication pipeline:
   enqueue them, and let `local-worker` claim one due job at a time.
 
 Both paths scrape and validate a research packet, deduplicate and match the
-source, ask the local llama.cpp model for a structured draft plus independent
-placement and evidence reviews, run deterministic quality gates, and prepare
-an isolated content patch. The default integrated policy harvests both direct
-findings and passage-grounded background facts across compatible pages, and it
-may create a focused entity page below the explicitly selected domain. A draft
-PR is possible only with `--publish`.
+source, make one bounded local-model call that extracts core results plus
+background/traditional healing uses and maps them to wiki targets, run
+deterministic quality gates, and prepare an isolated content patch. The model
+may choose compatible existing pages or a focused entity page below the
+explicitly selected domain. A draft PR is possible only with `--publish`.
 
 ![Local LLM Research Publisher production flow](diagrams/rendered/local-publisher-production-flow.svg)
 
@@ -87,7 +86,8 @@ else and supplies shared repository, citation, evidence, and PR rules.
 
 Important outcomes are intentional:
 
-- `duplicate`: the DOI/URL is already cited or an equivalent active job exists.
+- `duplicate`: the DOI/URL is already cited, is present on an open draft PR, or
+  an equivalent active job exists.
 - `rejected`: the source is permanently unusable or evidence is insufficient.
 - `needs_review`: the source may be useful, but matching or content judgment is
   not safe enough to automate.
@@ -102,10 +102,10 @@ create one or more missing entity pages in the same plan. Eligibility is
 domain-scoped and starts with exact title/stem entity phrases. Tags, folder
 categories, and body overlap rank eligible pages but never make an unrelated
 page eligible. A new page requires a safe path below the selected domain, a
-source-grounded lead, focused tags including its exact entity/title, category
-rationale, at least one direct finding, and all normal
-placement/evidence/render gates. For example, a citrus
-paper can create `Natural Healing/Fruits/Citrus/citrus.md` instead of being
+definition-form lead, focused tags including its exact entity/title, category
+rationale, at least one direct finding, and all normal source/entity/render
+gates. For example, a citrus paper can create
+`Natural Healing/Fruits/Citrus/citrus.md` instead of being
 forced onto Bergamot. Uncertain taxonomy or unsupported broader placement still
 becomes `needs_review`.
 
@@ -113,45 +113,23 @@ Each claim belongs to exactly one target. A plan covering green tea generally,
 Biluochun specifically, and an isolated compound such as DMY may use separate
 target proposals, but it may not use a broad page as a catch-all for
 compound-specific mechanisms.
-Global exclusions must be genuinely omitted from every target; contradictory
-reasons saying a passage was already captured, integrated, or not excluded fail
-deterministic validation.
 
-The integrated prompt uses normalized claim-bearing sections and reference
-entries rather than a blunt full-text truncation. Citation markers stay paired
-with their exact reference records, and the total candidate-page context is
-bounded. Increasing context alone is not the provenance strategy: the active
-262,144-token service already provides sufficient headroom for this structured
-packet.
+The default prompt reserves separate portions of a 55,000-character source
+budget for the abstract, Results, traditional-use sections, Introduction,
+Conclusion, and Discussion, so a long Results section cannot crowd out
+background material. Candidate page context is limited to 20,000 characters
+of page identity and headings. The paper's reference list is omitted. The one
+response has a 6,000-token completion budget and receives no model repair or
+critic call.
 
-Prompt context and completion length are separate limits. Drafts use a
-10,000-token completion budget. A draft that reaches the ceiling fails closed
-as truncated instead of entering syntax repair. Normally completed malformed
-JSON retains its raw text, hash, usage, and finish reason in the immutable run
-report and receives at most one syntax-only repair call before deterministic
-validation.
+Every accepted direct or background claim cites one shared footnote for the
+main scraped article. Earlier works mentioned by that article are not followed
+or linked. Exact source quotations remain in adjacent HTML provenance comments
+for PR review.
 
-### How the critic works
-
-Each draft attempt can make two independent local-model review calls:
-
-- the **placement review** receives the source packet, selected candidate
-  metadata, selected target Markdown, draft plan, and deterministic findings;
-- the **evidence review** receives the same grounded context but focuses on
-  source support, claim strength, study type, one-idea bullets, source
-  integrity, and material limitations.
-
-Both return issues from fixed code sets with `warning`, `review`, or `blocking`
-severity. Every objection must include an exact contiguous quotation from the
-source or selected target page; `wrong_target_page` requires both. Unknown
-codes, non-exact quotations, and self-contradictory findings are preserved as
-rejected critic findings but cannot gate the draft. Draft PRs display them under
-**Rejected critic observations (non-blocking)** with their validation errors,
-separate from authoritative validated findings. Safety findings such as
-study-type inflation are promoted to at least `review` severity. The publisher,
-not the model, derives approval from the validated issues. Deterministic code
-remains authoritative for literal source containment, near-verbatim similarity,
-candidate paths, and preclinical heading scope.
+The former multi-pass planner, placement/evidence critics, and balance repair
+remain available only through `--pipeline legacy` to reproduce older reports.
+Legacy critic flags do not alter the default `simple` path.
 
 ## Current iconium runtime
 
@@ -160,7 +138,7 @@ Observed on 2026-08-14:
 | Component | State | Address or schedule | Purpose |
 | --- | --- | --- | --- |
 | `research-triage-ui.service` | active | local/LAN port `8765` | curate intake rows and run the legacy Codex path |
-| `qwen-moe-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible draft/review API |
+| `qwen-moe-server-q8.service` | active | `127.0.0.1:8080/v1` | local OpenAI-compatible extraction/placement API |
 | `research-flaresolverr` | active Podman container | `127.0.0.1:8191` | browser/anti-bot retrieval fallback |
 | `research-db-backup.timer` | enabled | nightly around 03:30 | online SQLite backup and NAS integrity check |
 | `research-scholar-sync.timer` | not installed | template: every 30 minutes | passive Gmail alert ingestion |
@@ -175,10 +153,9 @@ before starting another port-8080 unit.
 
 ![Local llama.cpp integration](diagrams/rendered/local-llm-stack-integration.svg)
 
-Because the active llama server uses `-np 1`, run one publication job at a
-time. Deterministically invalid plans are repaired before critic calls are
-spent. Once a plan passes those checks, placement and evidence reviews run
-sequentially.
+Because the active llama server uses `-np 1`, the publisher takes an OS lock
+before its model request. An overlapping run fails quickly as
+`local_model_busy` instead of waiting inside a 600-second HTTP timeout.
 
 ## First-line health checks
 
@@ -235,9 +212,9 @@ Each invocation creates an immutable
 `out/runs/<timestamp>-<source-slug>-<source-hash>/` directory with `source.md`,
 `packet.json`, `report.json`, and `proposed.patch` when rendering succeeds.
 The report includes repository revisions, options, domain, candidate scoring
-and context budgets, duplicate checks, model call duration/token usage, all
-draft/critic attempts, malformed-output and format-repair details when present,
-artifact paths, and the publication outcome. Review at least:
+and context budgets, base/open-PR duplicate checks, model call duration/token
+usage, deterministic findings, artifact paths, and the publication outcome.
+Review at least:
 
 1. scraped title, DOI, abstract/body, and warnings;
 2. selected target Markdown path and heading;
@@ -247,8 +224,8 @@ artifact paths, and the publication outcome. Review at least:
 6. the complete Git diff.
 
 During execution, stderr carries JSON progress records for scraping, matching,
-each draft/format-repair/deterministic-validation/critic attempt, and final
-render validation. Preserve these in service logs when diagnosing a long job.
+the single draft, deterministic validation, and final render validation.
+Preserve these in service logs when diagnosing a long job.
 
 Only after that review, rerun with publication enabled:
 
@@ -261,39 +238,25 @@ Only after that review, rerun with publication enabled:
 `origin/main`, pushes it, and opens a draft PR after every gate passes. It does
 not merge the PR.
 
-### Critic modes and human override
+For a deliberate side-by-side comparison with an existing citation or draft
+PR, add `--allow-duplicate-pr`. This requires `--publish`, preserves the
+duplicate evidence in the immutable report and new PR body, and bypasses only
+the duplicate stop—not source, evidence, render, or Git gates.
 
-Required mode is the default and is the only normal publication path:
+### Compatibility pipeline
 
-```bash
-./agent-workflow local-publish URL --domain 'Natural Healing' --critic-mode required
-```
-
-Advisory mode runs and records both critics, then may render a patch if all
-deterministic gates pass. Even if `--publish` is present, commit/push/PR creation
-is suppressed and the report records `publication_suppressed`:
-
-```bash
-./agent-workflow local-publish URL --domain 'Natural Healing' --critic-mode advisory --publish
-```
-
-Off mode skips the critic calls and is manual ad-hoc dry-run only;
-`--critic-mode off --publish` is rejected.
-
-After a human has reviewed the source identity, citation metadata, selected
-target, draft, critic findings, and diff, an override request may be recorded
-explicitly for audit:
+The command defaults to `--pipeline simple`; no extra flag is necessary.
+Use the former multi-pass critic loop only to reproduce or diagnose an older
+run:
 
 ```bash
-./agent-workflow local-publish URL --domain 'Natural Healing' --critic-mode required --publish \
-  --allow-critic-rejection \
-  --override-reason "Human reviewed target and evidence"
+./agent-workflow local-publish URL --domain 'Natural Healing' \
+  --pipeline legacy --critic-mode required
 ```
 
-The request does not bypass a critic rejection or any packet/citation metadata,
-duplicate, exact quotation, entity, preclinical placement, or rendered-Markdown
-gate. It is retained so a reviewer can see that an override was requested; it
-never turns a rejected run into a publication.
+`--critic-mode`, `--max-draft-attempts`, `--allow-critic-rejection`, and
+`--override-reason` are legacy-only controls. They do not add approval gates to
+the default path.
 
 ## Passive database workflow
 
@@ -330,9 +293,9 @@ and an append-only event history. Active canonical-source and active-article
 uniqueness indexes prevent URL variants of the same candidate from being
 enqueued twice.
 
-`local-worker` is hard-wired to required critic mode. It exposes no override
-flags, and its internal passive-worker context rejects any attempted critic
-override.
+`local-worker` also defaults to the single-pass pipeline. `--pipeline legacy`
+is available for controlled compatibility testing; critic overrides remain
+prohibited in the passive worker.
 
 A dry-run that passes all gates stops as `validated`. It is never silently
 claimed again. After reviewing it—or after repairing a `needs_review`,
@@ -499,18 +462,18 @@ and deployment operations. Generated HTML is never an authoring target.
 
 | Symptom | Check | Safe response |
 | --- | --- | --- |
-| llama request fails or returns no final JSON | model unit logs, `/v1/models`, selected model ID | stop queue timer; restore the expected model service; retry one dry-run job |
-| draft output reaches its completion limit | model call `finish_reason`, completion tokens, preserved response | reduce plan breadth or stage claim selection; do not treat truncated JSON as a syntax-only defect |
+| `local_model_busy` | lock owner in `runtime/local-publisher/model.lock`, running publisher processes | let the active run finish; do not launch overlapping jobs against the `-np 1` server |
+| llama request fails, times out, or returns no final JSON | model unit logs, `/v1/models`, selected model ID, prompt size | stop queue timer; restore the expected model service; retry one single-pass dry run |
+| draft output reaches its completion limit or is malformed | model call `finish_reason`, completion tokens, preserved response | review the packet and prompt breadth; the simple path intentionally makes no repair call |
 | page is a robot/CAPTCHA/error page | packet warnings, scraper backend, Flare logs | do not override the packet gate; fix retrieval or use another authoritative source |
 | FlareSolverr says success but packet is rejected | returned title/body and fatal-page markers | treat Flare success as transport success only; allow browser fallback or reject |
 | DOI and title mismatch | scraped title, DOI source, Crossref title | reject and correct source identity; never force the DOI |
 | invalid DOI, placeholder authors/journal/date, or truncated abstract | `metadata_repairs` and `citation_metadata_issues` | repair retrieval/enrichment; these deterministic citation gates cannot be overridden |
-| critic issue is unquoted or contradicts itself | critic `rejected_issues` and validation warnings | treat it as non-gating model noise; do not edit the report to force a decision |
-| grounded critic `review`/`blocking` issue | placement/evidence review, exact quotes, selected target | revise or choose a better target; use the audited ad-hoc override only after human review |
+| source already has an open PR | `duplicate.open_pull_requests` and returned `pr_url` | normally review or update that PR; use `--publish --allow-duplicate-pr` only for an intentional side-by-side comparison |
 | job remains leased after interruption | lease owner, expiry, events, service logs | wait for expiry or perform a documented recovery while worker is stopped |
 | repeated `retry` becomes `failed` | event error history, `next_run_at`, and attempt count | repair the underlying dependency, then use audited `requeue-local`; do not create a parallel job |
 | `validated` | immutable report and patch | review artifacts, then explicitly requeue the same job before a `--publish` worker run |
-| `needs_review` | candidate scores, new-page proposal, headings, study design, critic issues | repair placement/evidence or edit manually; do not coerce an uncertain update |
+| `needs_review` | packet, exact-quote/entity/evidence findings, candidate scores, headings, study design | repair the deterministic cause or edit manually; do not coerce an uncertain update |
 | clean process exit but no PR | report status and `pr_url` | keep unprocessed; a verified PR URL is required |
 | backup fails | NAS mount, free space, backup log, integrity output | stop new queue work if no recent good backup; restore storage first |
 | SQLite lock contention | active services and writers | keep one publisher worker; do not copy the live DB while writers run |

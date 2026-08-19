@@ -101,7 +101,7 @@ edges:
     style: dashed
   - from: publisher_timer
     to: llm
-    label: sequential draft and critic
+    label: locked single model pass
     style: dashed
   - from: publisher_timer
     to: flare

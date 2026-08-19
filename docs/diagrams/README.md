@@ -24,7 +24,7 @@ The preferred path from alert ingestion and human triage through evidence extrac
 
 ### Local publisher production flow
 
-The implemented ad-hoc and passive intake paths through deterministic scraping/matching, a local-model draft plus separate placement/evidence reviews, hard quality gates, isolated content worktrees, draft PR review, and downstream deployment.
+The implemented ad-hoc and passive intake paths through deterministic scraping/matching, one bounded local-model extraction/placement pass, hard quality gates, isolated content worktrees, draft PR review, and downstream deployment.
 
 [Open SVG](rendered/local-publisher-production-flow.svg) · [Open PNG](rendered/local-publisher-production-flow.png) · [Edit specification](specs/local-publisher-production-flow.yaml)
 
@@ -40,7 +40,7 @@ How original and canonical URLs move through Scrapling, FlareSolverr, and agent-
 
 ### Local publisher quality gates
 
-The fail-closed sequence for packet sufficiency, source identity, duplicate detection, placement, near-verbatim quotation, claim strength, critic review, style, rendering, and Git scope.
+The fail-closed sequence for packet sufficiency, source identity, base/open-PR duplicate detection, model concurrency, entity placement, near-verbatim quotation, evidence scope, main-article-only citations, style, rendering, and Git scope.
 
 [Open SVG](rendered/local-publisher-quality-gates.svg) · [Open PNG](rendered/local-publisher-quality-gates.png) · [Edit specification](specs/local-publisher-quality-gates.yaml)
 
@@ -80,7 +80,7 @@ The observed active triage, llama.cpp, FlareSolverr, and backup components; the 
 
 ### Local llama.cpp stack integration
 
-The structured draft and placement/evidence review API calls from `local_publish.py` through the active OpenAI-compatible port, Qwen systemd unit, rootless ROCm Toolbx, model, and Strix Halo GPU, including mutually exclusive port-8080 alternatives.
+The single bounded extraction/placement API call from `local_publish.py` through the active OpenAI-compatible port, Qwen systemd unit, rootless ROCm Toolbx, model, and Strix Halo GPU, including the publisher lock and mutually exclusive port-8080 alternatives.
 
 [Open SVG](rendered/local-llm-stack-integration.svg) · [Open PNG](rendered/local-llm-stack-integration.png) · [Edit specification](specs/local-llm-stack-integration.yaml)
 
