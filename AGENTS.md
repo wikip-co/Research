@@ -42,7 +42,7 @@ wiki instead of maintaining competing instructions. Preserve evidence dates,
 source code revisions and confirmed-versus-model-only labels. Never copy raw
 mail/database records, credentials or full model prompts into the wiki.
 
-The local site is served on localhost:4010. GitHub stores source/history only;
+The LAN site is served on http://iconium:4010 (port 4010 is allowed from the local subnet). GitHub stores source/history only;
 no GitHub Pages or external wiki deployment is configured. Source lives under
 `wiki/source/content/_posts`, diagrams and model sources under the owning
 article's `wiki/source/content/artifacts/` directory. Do not edit `wiki/docs/`.

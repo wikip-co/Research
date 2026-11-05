@@ -14,16 +14,21 @@ npm --prefix wiki/source ci
 npm --prefix wiki/source run clean
 npm --prefix wiki/source run build
 npm --prefix wiki/source run verify
-python3 -m http.server 4010 --bind 127.0.0.1 --directory wiki/docs
+python3 -m http.server 4010 --bind 0.0.0.0 --directory wiki/docs
 ```
 
 The installed user unit is `research-wiki.service` (manual start, not enabled at login).
 Use `systemctl --user start research-wiki.service` or the Python command above.
 
-Open http://localhost:4010/. Generated `wiki/docs/` is ignored. Source and history
+Open http://iconium:4010/ from the LAN (or http://localhost:4010/ on Iconium). Generated `wiki/docs/` is ignored. Source and history
 are tracked in Research; no submodule or separate wiki remote is required.
 GitHub Pages and other external hosting are not configured. The root
 `.github/workflows/wiki.yml` validates the nested wiki on PRs and pushes.
+
+The service listens on IPv4 interfaces; the host firewall allows TCP 4010 only
+from `10.32.25.0/24`. On another host, use its actual LAN subnet. The hostname
+`iconium` must resolve on each client; the current fallback is `http://10.32.25.177:4010/`.
+No router port forwarding is configured. The user service remains manually started.
 
 ## Work with agents
 

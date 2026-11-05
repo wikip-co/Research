@@ -12,7 +12,7 @@ tags:
 
 **Evidence date: 2026-11-04, America/Los_Angeles.** This is the knowledge home for the Research workspace: a coordinator plus the independent `research-tools`, `content` and `wikip.co` repositories. The local Qwen3.8 27B Vulkan endpoint, FlareSolverr and restored SQLite triage UI work. A real-paper draft completed but was stopped by editorial gates. Gmail/Cloudinary credentials and unattended operation remain unresolved. No research content was published by this review.
 
-The project wiki is an ordinary tracked **`Research/wiki/` directory**, included when the `analysis/research-visual-review` branch (or a later main containing it) is cloned. It is not a submodule or a separate Git repository. The site runs locally at [localhost:4010](http://localhost:4010/); GitHub stores source/history, not a deployed wiki. No GitHub Pages or external wiki hosting is configured.
+The project wiki is an ordinary tracked **`Research/wiki/` directory**, included when the `analysis/research-visual-review` branch (or a later main containing it) is cloned. It is not a submodule or a separate Git repository. The site is available on the LAN at [iconium:4010](http://iconium:4010/) following the owner’s LAN-access request on 2026-11-04; GitHub stores source/history, not a deployed wiki. No GitHub Pages or external wiki hosting is configured.
 
 ## Start a walkthrough
 

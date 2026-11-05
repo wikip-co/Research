@@ -7,7 +7,7 @@ keywords:
 author: "Research Project"
 language: en
 timezone: "America/Los_Angeles"
-url: "http://localhost:4010"
+url: "http://iconium:4010"
 root: "/"
 permalink: :post_title/
 permalink_defaults:
