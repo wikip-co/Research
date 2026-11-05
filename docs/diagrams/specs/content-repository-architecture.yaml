@@ -1,0 +1,98 @@
+title: Content Repository Architecture
+direction: LR
+graph_attr:
+  ranksep: "1.05"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: inputs
+    label: Authoring inputs
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#64748b"
+  - id: repo
+    label: "wikip-co/content (3,217 tracked files)"
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: automation
+    label: Repository automation
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+nodes:
+  - id: agents
+    label: "Agents and humans\nevidence-backed Markdown"
+    icon: onprem.client.Users
+    cluster: inputs
+  - id: style
+    label: "Research style guides\nstructure, citations, evidence limits"
+    icon: generic.storage.Storage
+    cluster: inputs
+  - id: tooling
+    label: "research-tools\nsearch, match, lint, PR"
+    icon: programming.language.Python
+    cluster: inputs
+  - id: bible
+    label: "Bible Study\n2,632 Markdown files"
+    icon: generic.storage.Storage
+    cluster: repo
+  - id: devops
+    label: "DevOps\n268 Markdown files"
+    icon: generic.storage.Storage
+    cluster: repo
+  - id: healing
+    label: "Natural Healing\n247 Markdown files"
+    icon: generic.storage.Storage
+    cluster: repo
+  - id: other
+    label: "Other subject trees\n59 Markdown files"
+    icon: generic.storage.Storage
+    cluster: repo
+  - id: article
+    label: "Article contract\nYAML frontmatter + body + footnotes"
+    icon: generic.storage.Storage
+    cluster: repo
+  - id: main
+    label: "content/main\nMarkdown source of truth"
+    icon: onprem.vcs.Github
+    cluster: repo
+  - id: trigger
+    label: "trigger-sites.yml\nMarkdown paths on main"
+    icon: onprem.ci.GithubActions
+    cluster: automation
+  - id: dispatch
+    label: "wikip.co repository_dispatch\ncontent_ref + exact content_sha"
+    icon: onprem.ci.GithubActions
+    cluster: automation
+edges:
+  - from: agents
+    to: article
+    label: author/review
+  - from: style
+    to: article
+    label: required conventions
+  - from: tooling
+    to: article
+    label: append or create
+  - from: bible
+    to: article
+    label: category tree
+  - from: devops
+    to: article
+    label: category tree
+  - from: healing
+    to: article
+    label: category tree
+  - from: other
+    to: article
+    label: category tree
+  - from: article
+    to: main
+    label: reviewed merge
+  - from: main
+    to: trigger
+    label: Markdown push
+  - from: trigger
+    to: dispatch
+    label: rebuild request

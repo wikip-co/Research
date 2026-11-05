@@ -1,0 +1,122 @@
+title: Exact-SHA Content Publishing Pipeline
+direction: LR
+graph_attr:
+  ranksep: "1.05"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: content_repo
+    label: wikip-co/content
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: site_repo
+    label: wikip-co/wikip.co GitHub Actions runner
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#1d4ed8"
+  - id: outputs
+    label: Published outputs
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: content_main
+    label: "content/main\nmerged Markdown commit"
+    icon: onprem.vcs.Github
+    cluster: content_repo
+  - id: trigger
+    label: "Trigger Site Rebuilds\ncontent_ref + content_sha"
+    icon: onprem.ci.GithubActions
+    cluster: content_repo
+  - id: generator
+    label: "Generate Site\nrepository_dispatch or site push"
+    icon: onprem.ci.GithubActions
+    cluster: site_repo
+  - id: checkout_site
+    label: "Checkout wikip.co\nsubmodules disabled"
+    icon: onprem.vcs.Github
+    cluster: site_repo
+  - id: checkout_content
+    label: "Checkout content SHA\nfull Git history"
+    icon: onprem.vcs.Github
+    cluster: site_repo
+  - id: checkout_public
+    label: "Checkout public/main\ntemporary publish worktree"
+    icon: onprem.vcs.Github
+    cluster: site_repo
+  - id: prepare
+    label: "prepare-content\ncopy files and restore mtimes"
+    icon: generic.os.LinuxGeneral
+    cluster: site_repo
+  - id: hexo
+    label: "npm ci + Hexo build\nplain public output"
+    icon: programming.language.NodeJS
+    cluster: site_repo
+  - id: sync
+    label: "rsync --delete\ncommit and push public/main"
+    icon: onprem.vcs.Git
+    cluster: site_repo
+  - id: docker
+    label: "Buildx + QEMU\namd64 and arm64"
+    icon: onprem.container.Docker
+    cluster: site_repo
+  - id: public_repo
+    label: "wikip-co/public\ngenerated Git repository"
+    icon: onprem.vcs.Github
+    cluster: outputs
+  - id: pages
+    label: "Cloudflare Pages\nproduction website"
+    icon: saas.cdn.Cloudflare
+    cluster: outputs
+  - id: dockerhub
+    label: "Docker Hub\nlatest image"
+    icon: onprem.container.Docker
+    cluster: outputs
+edges:
+  - from: content_main
+    to: trigger
+    label: Markdown push to main
+  - from: trigger
+    to: generator
+    label: repository_dispatch exact SHA
+    penwidth: "2.0"
+  - from: generator
+    to: checkout_site
+  - from: generator
+    to: checkout_content
+    label: ref = content_sha
+  - from: generator
+    to: checkout_public
+    label: ref = main
+  - from: checkout_content
+    to: prepare
+    label: source and history
+  - from: checkout_site
+    to: prepare
+    label: scripts and excludes
+  - from: prepare
+    to: hexo
+    label: plain _posts tree
+  - from: hexo
+    to: sync
+    label: generated public/
+  - from: checkout_public
+    to: sync
+    label: publish worktree
+  - from: sync
+    to: public_repo
+    label: commit and push
+    penwidth: "2.0"
+  - from: public_repo
+    to: pages
+    label: deployment source
+  - from: checkout_site
+    to: docker
+    label: Dockerfile and theme
+  - from: prepare
+    to: docker
+    label: prepared posts
+  - from: docker
+    to: dockerhub
+    label: push latest

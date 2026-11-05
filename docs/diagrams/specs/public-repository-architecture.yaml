@@ -1,0 +1,84 @@
+title: Public Generated-Site Repository Architecture
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.65"
+  pad: "0.5"
+clusters:
+  - id: writer
+    label: Sole writer
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: repository
+    label: "wikip-co/public main (4,466 generated files)"
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: consumers
+    label: Deployment consumers
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: workflow
+    label: "wikip.co Generate Site\nrsync, commit, push"
+    icon: onprem.ci.GithubActions
+    cluster: writer
+  - id: guardrail
+    label: "Generated output only\nno manual source editing"
+    icon: onprem.vcs.Git
+    cluster: writer
+  - id: pages
+    label: "4,444 index.html pages\narticles, tags, categories"
+    icon: generic.storage.Storage
+    cluster: repository
+  - id: assets
+    label: "CSS, JavaScript, fonts\ntheme and client assets"
+    icon: generic.storage.Storage
+    cluster: repository
+  - id: search
+    label: "search.xml\nsite search index"
+    icon: generic.storage.Storage
+    cluster: repository
+  - id: documents
+    label: "7 PDF/EPUB documents\ncontent attachments"
+    icon: generic.storage.Storage
+    cluster: repository
+  - id: git_history
+    label: "main branch history\none generated snapshot per change"
+    icon: onprem.vcs.Github
+    cluster: repository
+  - id: cloudflare
+    label: "Cloudflare Pages\nproduction deployment"
+    icon: saas.cdn.Cloudflare
+    cluster: consumers
+  - id: visitors
+    label: "Web visitors\nwikip.co and www.wikip.co"
+    icon: ibm.user.Browser
+    cluster: consumers
+edges:
+  - from: workflow
+    to: guardrail
+    label: automated ownership
+  - from: guardrail
+    to: git_history
+    label: commits snapshot
+  - from: pages
+    to: git_history
+    label: tracked output
+  - from: assets
+    to: git_history
+    label: tracked output
+  - from: search
+    to: git_history
+    label: tracked output
+  - from: documents
+    to: git_history
+    label: tracked output
+  - from: git_history
+    to: cloudflare
+    label: deploy from main
+  - from: cloudflare
+    to: visitors
+    label: HTTPS delivery

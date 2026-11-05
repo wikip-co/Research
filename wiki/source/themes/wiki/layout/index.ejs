@@ -1,0 +1,157 @@
+<%
+    const catalog = wiki_catalog();
+    const settings = theme.home || {};
+    const commits = catalog.changes.slice(0, settings.changes || 60);
+    const visible = settings.changes_visible || 15;
+    const projectsRoot = catalog.folders.children.get('Active Projects');
+    const byUpdated = function (a, b) { return String(b.updated).localeCompare(String(a.updated)); };
+    const projects = projectsRoot ? Array.from(projectsRoot.children.values()).sort(byUpdated) : [];
+    const subjects = Array.from(catalog.folders.children.values()).filter(function (folder) { return folder !== projectsRoot; }).sort(byUpdated);
+
+    const days = [];
+    commits.forEach(function (commit, index) {
+        const key = date(commit.date, 'YYYY-MM-DD');
+        let group = days[days.length - 1];
+        if (!group || group.key !== key) {
+            group = { key: key, label: date(commit.date, 'dddd, MMMM D, YYYY'), commits: [] };
+            days.push(group);
+        }
+        group.commits.push({ commit: commit, index: index });
+    });
+
+    function overviewOf(folder) {
+        const stack = [folder];
+        while (stack.length) {
+            const node = stack.shift();
+            const match = node.articles.find(function (article) { return article.overview; });
+            if (match) return match;
+            stack.push.apply(stack, Array.from(node.children.values()));
+        }
+        return null;
+    }
+    function filterKey(status) {
+        return status === 'renamed' ? 'moved' : status;
+    }
+%>
+<section class="home" aria-labelledby="home-title">
+    <h1 id="home-title" class="screen-reader-text"><%= config.title %></h1>
+    <div class="home-stats">
+        <div class="home-stat"><strong><%= catalog.articles.length %></strong><span>articles</span></div>
+        <div class="home-stat"><strong><%= projects.length %></strong><span>active projects</span></div>
+        <div class="home-stat"><strong data-updated-since="7" data-dates="<%= catalog.articles.map(function (article) { return article.updated; }).join(',') %>">–</strong><span>updated in the last 7 days</span></div>
+        <div class="home-stat"><strong><%- commits.length ? wiki_time(commits[0].date) : '–' %></strong><span>last change</span></div>
+    </div>
+
+    <div class="home-grid">
+        <section class="wiki-panel home-changes" aria-labelledby="changes-title">
+            <header class="wiki-panel-header">
+                <h2 id="changes-title"><i class="fa fa-history" aria-hidden="true"></i> Recent changes</h2>
+                <a href="<%- url_for('changes.xml') %>" title="Atom feed of recent changes"><i class="fa fa-rss" aria-hidden="true"></i> Feed</a>
+            </header>
+            <p class="last-visit" hidden></p>
+            <div class="change-filters" role="group" aria-label="Filter changes">
+                <button type="button" data-change-filter="all" aria-pressed="true">All</button>
+                <button type="button" data-change-filter="added" aria-pressed="false">New</button>
+                <button type="button" data-change-filter="modified" aria-pressed="false">Updated</button>
+                <button type="button" data-change-filter="moved" aria-pressed="false">Moved</button>
+                <button type="button" data-change-filter="deleted" aria-pressed="false">Removed</button>
+            </div>
+            <% if (!commits.length) { %>
+                <p class="wiki-empty">No Git history is available for this build.</p>
+            <% } %>
+            <ol class="change-days">
+                <% days.forEach(function (day) { %>
+                    <li class="change-day"<%- day.commits[0].index >= visible ? ' data-overflow hidden' : '' %>>
+                        <h3><%= day.label %></h3>
+                        <ol class="change-commits">
+                            <% day.commits.forEach(function (item) {
+                                const commit = item.commit; %>
+                                <li class="change-commit" data-date="<%= commit.date %>"<%- item.index >= visible ? ' data-overflow hidden' : '' %>>
+                                    <div class="change-commit-header">
+                                        <span class="change-subject"><%= commit.subject %></span>
+                                        <span class="change-commit-meta">
+                                            <%- wiki_time(commit.date, { format: 'h:mm A', relative: false }) %>
+                                            · <%= commit.author %>
+                                            <% if (commit.commit_url) { %>· <a href="<%= commit.commit_url %>" target="_blank" rel="noopener" title="View commit"><code><%= commit.short %></code></a><% } %>
+                                        </span>
+                                    </div>
+                                    <ul class="change-files">
+                                        <% commit.changes.forEach(function (change) { %>
+                                            <li class="change change-<%= change.status %>" data-status="<%= filterKey(change.status) %>">
+                                                <span class="change-badge"><%= wiki_change_label(change) %></span>
+                                                <% if (change.href) { %>
+                                                    <a class="change-title" href="<%- change.href %>"><%= change.title %></a>
+                                                <% } else { %>
+                                                    <span class="change-title change-title-gone" title="<%= change.removed ? 'This article has since been removed or moved' : 'Removed' %>"><%= change.title %></span>
+                                                <% } %>
+                                                <span class="change-folder">
+                                                    <% if (change.previous_folder && change.status === 'moved') { %>
+                                                        <%= change.previous_folder.join(' › ') %> → <%= change.folder.join(' › ') %>
+                                                    <% } else { %>
+                                                        <%= change.folder.join(' › ') %>
+                                                    <% } %>
+                                                </span>
+                                            </li>
+                                        <% }); %>
+                                    </ul>
+                                </li>
+                            <% }); %>
+                        </ol>
+                    </li>
+                <% }); %>
+            </ol>
+            <p class="change-filter-empty wiki-empty" hidden>No changes of this type in the listed period.</p>
+            <% if (commits.length > visible) { %>
+                <button type="button" class="wiki-button" id="show-older-changes">Show older changes</button>
+            <% } %>
+        </section>
+
+        <aside class="home-side">
+            <section class="wiki-panel home-folders" aria-labelledby="projects-title">
+                <header class="wiki-panel-header">
+                    <h2 id="projects-title"><i class="fa fa-folder-open" aria-hidden="true"></i> Active projects</h2>
+                    <% if (projectsRoot && projectsRoot.href) { %><a href="<%- projectsRoot.href %>">All</a><% } %>
+                </header>
+                <ul class="folder-list">
+                    <% projects.forEach(function (project) {
+                        const overview = overviewOf(project); %>
+                        <li>
+                            <div class="folder-list-title">
+                                <a href="<%- project.href %>"><%= project.name %></a>
+                                <span class="fresh-badge" data-updated="<%= project.updated %>" hidden></span>
+                            </div>
+                            <div class="folder-list-meta">
+                                <%= project.count %> article<%= project.count === 1 ? '' : 's' %> · updated <%- wiki_time(project.updated) %>
+                                <% if (overview) { %>· <a href="<%- overview.href %>">overview</a><% } %>
+                            </div>
+                        </li>
+                    <% }); %>
+                </ul>
+            </section>
+            <% if (subjects.length) { %>
+                <section class="wiki-panel home-folders" aria-labelledby="guides-title">
+                    <header class="wiki-panel-header">
+                        <h2 id="guides-title"><i class="fa fa-book" aria-hidden="true"></i> Guides and reference</h2>
+                    </header>
+                    <ul class="folder-list">
+                        <% subjects.forEach(function (folder) { %>
+                            <li>
+                                <div class="folder-list-title"><a href="<%- folder.href %>"><%= folder.name %></a></div>
+                                <div class="folder-list-meta">
+                                    <%= folder.count %> article<%= folder.count === 1 ? '' : 's' %> · updated <%- wiki_time(folder.updated) %>
+                                </div>
+                                <% if (folder.children.size) { %>
+                                    <ul class="folder-sublist">
+                                        <% Array.from(folder.children.values()).sort(byUpdated).forEach(function (child) { %>
+                                            <li><a href="<%- child.href %>"><%= child.name %></a> <span class="folder-list-meta">(<%= child.count %>)</span></li>
+                                        <% }); %>
+                                    </ul>
+                                <% } %>
+                            </li>
+                        <% }); %>
+                    </ul>
+                </section>
+            <% } %>
+        </aside>
+    </div>
+</section>

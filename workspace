@@ -1,0 +1,185 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace_root="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+manifest="${RESEARCH_WORKSPACE_MANIFEST:-${workspace_root}/workspace-repos.tsv}"
+git_protocol="${RESEARCH_GIT_PROTOCOL:-ssh}"
+
+usage() {
+  cat <<'EOF'
+Usage: ./workspace [sync|status|validate|migrate|verify-layout]
+
+Commands:
+  sync      Clone missing repositories and fast-forward clean default branches.
+  status    Show the branch and working-tree state of every repository.
+  validate  Validate the manifest without accessing the network.
+  migrate   Detach legacy submodule gitdirs in an existing workspace.
+  verify-layout
+            Verify standalone repos and plain site build directories.
+
+Environment:
+  RESEARCH_GIT_PROTOCOL       ssh (default) or https
+  RESEARCH_WORKSPACE_MANIFEST alternate manifest path
+EOF
+}
+
+repo_url() {
+  local repository="$1"
+  case "$git_protocol" in
+    ssh) printf 'git@github.com:%s.git\n' "$repository" ;;
+    https) printf 'https://github.com/%s.git\n' "$repository" ;;
+    *)
+      printf 'Unsupported RESEARCH_GIT_PROTOCOL: %s\n' "$git_protocol" >&2
+      return 2
+      ;;
+  esac
+}
+
+read_manifest() {
+  if [[ ! -f "$manifest" ]]; then
+    printf 'Manifest not found: %s\n' "$manifest" >&2
+    return 1
+  fi
+
+  while IFS=$'\t' read -r path repository branch extra; do
+    [[ -z "$path" || "$path" == \#* ]] && continue
+    if [[ -z "$repository" || -z "$branch" || -n "${extra:-}" ]]; then
+      printf 'Invalid manifest row for %s; expected path, repository, branch.\n' "$path" >&2
+      return 1
+    fi
+    if [[ "$path" == /* || "$path" == *..* || "$repository" != */* ]]; then
+      printf 'Unsafe manifest row: %s %s\n' "$path" "$repository" >&2
+      return 1
+    fi
+    printf '%s\t%s\t%s\n' "$path" "$repository" "$branch"
+  done < "$manifest"
+}
+
+validate_manifest() {
+  local rows
+  rows="$(read_manifest)"
+  if [[ -z "$rows" ]]; then
+    printf 'Manifest contains no repositories: %s\n' "$manifest" >&2
+    return 1
+  fi
+  printf 'Manifest is valid: %s\n' "$manifest"
+}
+
+sync_repo() {
+  local path="$1" repository="$2" branch="$3"
+  local destination="${workspace_root}/${path}"
+  local url
+  url="$(repo_url "$repository")"
+
+  if [[ ! -e "$destination" ]]; then
+    printf 'Cloning %s into %s\n' "$repository" "$path"
+    git clone --branch "$branch" --single-branch "$url" "$destination"
+    return
+  fi
+
+  if ! git -C "$destination" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    printf 'Refusing to replace non-repository path: %s\n' "$destination" >&2
+    return 1
+  fi
+
+  local origin_url
+  origin_url="$(git -C "$destination" remote get-url origin 2>/dev/null || true)"
+  case "$origin_url" in
+    "git@github.com:${repository}.git"|"https://github.com/${repository}.git") ;;
+    *)
+      printf 'Refusing to update %s: origin is %s, expected %s.\n' \
+        "$path" "${origin_url:-missing}" "$repository" >&2
+      return 1
+      ;;
+  esac
+
+  printf 'Fetching %s\n' "$repository"
+  git -C "$destination" fetch --prune origin "$branch"
+
+  if [[ -n "$(git -C "$destination" status --porcelain)" ]]; then
+    printf 'Leaving %s on its current commit because it has local changes.\n' "$path"
+    return
+  fi
+
+  local current_branch
+  current_branch="$(git -C "$destination" symbolic-ref --quiet --short HEAD || true)"
+  if [[ "$current_branch" != "$branch" ]]; then
+    printf 'Leaving %s on branch %s (manifest branch: %s).\n' \
+      "$path" "${current_branch:-detached HEAD}" "$branch"
+    return
+  fi
+
+  git -C "$destination" merge --ff-only "origin/${branch}"
+}
+
+status_repo() {
+  local path="$1" repository="$2" branch="$3"
+  local destination="${workspace_root}/${path}"
+  printf '\n[%s] %s (%s)\n' "$path" "$repository" "$branch"
+  if [[ ! -e "$destination" ]]; then
+    printf 'not cloned\n'
+    return
+  fi
+  if ! git -C "$destination" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    printf 'exists but is not a Git repository\n'
+    return 1
+  fi
+  git -C "$destination" status --short --branch
+}
+
+verify_layout() {
+  local path destination expected_gitdir
+  local failed=0
+  while IFS=$'\t' read -r path _repository _branch; do
+    destination="${workspace_root}/${path}"
+    if [[ ! -d "$destination/.git" ]]; then
+      printf 'Not standalone: %s/.git is not a directory.\n' "$path" >&2
+      failed=1
+      continue
+    fi
+    expected_gitdir="$(cd -- "$destination/.git" && pwd)"
+    if [[ "$(git -C "$destination" rev-parse --absolute-git-dir)" != "$expected_gitdir" ]]; then
+      printf 'Wrong gitdir: %s\n' "$path" >&2
+      failed=1
+      continue
+    fi
+    printf 'Standalone: %s\n' "$path"
+  done < <(read_manifest)
+
+  for path in wikip.co/public wikip.co/site/source/_posts; do
+    if [[ -e "${workspace_root}/${path}/.git" ]]; then
+      printf 'Nested Git metadata remains: %s/.git\n' "$path" >&2
+      failed=1
+    else
+      printf 'Plain build directory: %s\n' "$path"
+    fi
+  done
+  return "$failed"
+}
+
+command="${1:-sync}"
+case "$command" in
+  sync)
+    validate_manifest >/dev/null
+    while IFS=$'\t' read -r path repository branch; do
+      sync_repo "$path" "$repository" "$branch"
+    done < <(read_manifest)
+    ;;
+  status)
+    validate_manifest >/dev/null
+    while IFS=$'\t' read -r path repository branch; do
+      status_repo "$path" "$repository" "$branch"
+    done < <(read_manifest)
+    ;;
+  validate) validate_manifest ;;
+  migrate)
+    shift
+    "${workspace_root}/scripts/migrate-legacy-submodules" "$@"
+    ;;
+  verify-layout) verify_layout ;;
+  -h|--help|help) usage ;;
+  *)
+    usage >&2
+    exit 2
+    ;;
+esac

@@ -1,0 +1,44 @@
+name: Validate Wiki
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['source/**', '.github/workflows/**', 'Dockerfile', '.dockerignore', 'docker/**', 'compose*.yml', 'scripts/**']
+  pull_request:
+    paths: ['source/**', '.github/workflows/**', 'Dockerfile', '.dockerignore', 'docker/**', 'compose*.yml', 'scripts/**']
+
+concurrency:
+  group: validate-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: source/.nvmrc
+          cache: npm
+          cache-dependency-path: source/package-lock.json
+      - run: npm ci --prefix source
+      - run: npm --prefix source test
+      - run: node source/bin/wiki.js lint --all
+      - name: Build and verify
+        run: |
+          npm --prefix source run clean
+          npm --prefix source run build
+          npm --prefix source run verify
+      - name: Validate container configuration
+        run: docker compose config --quiet
+      - name: Build static server image
+        run: docker compose build
+      - name: Smoke-test static server
+        run: bash scripts/check-container.sh

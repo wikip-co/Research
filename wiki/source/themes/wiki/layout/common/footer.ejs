@@ -1,0 +1,17 @@
+<% const footerCatalog = wiki_catalog(); %>
+<footer id="footer">
+    <div class="outer">
+        <div id="footer-info" class="inner">
+            <span><%= footerCatalog.articles.length %> articles<% if (footerCatalog.changes.length) { %> · last change <%- wiki_time(footerCatalog.changes[0].date) %><% } %></span>
+            <span class="footer-links">
+                <a href="<%- url_for('changes.xml') %>"><i class="fa fa-rss" aria-hidden="true"></i> Changes feed</a>
+                <span aria-hidden="true">·</span>
+                For agents:
+                <a href="<%- url_for('llms.txt') %>">llms.txt</a>
+                <a href="<%- url_for('llms-full.txt') %>">llms-full.txt</a>
+                <a href="<%- url_for('api/articles.json') %>">articles.json</a>
+                <a href="<%- url_for('api/changes.json') %>">changes.json</a>
+            </span>
+        </div>
+    </div>
+</footer>

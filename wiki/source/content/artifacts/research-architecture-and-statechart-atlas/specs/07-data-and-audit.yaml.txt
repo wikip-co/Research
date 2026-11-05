@@ -1,0 +1,120 @@
+title: 'Research records: three different lifecycles'
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Intake records
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Paper lifecycle
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Execution lifecycle
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Artifacts
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+- id: g4
+  label: Delivery lifecycle
+  graph_attr:
+    bgcolor: '#f8fafc'
+    color: '#94a3b8'
+nodes:
+- id: messages
+  label: 'messages
+
+    email identity + raw payload'
+  cluster: g0
+- id: articles
+  label: 'articles
+
+    alert occurrence + triage
+
+    processed_at'
+  cluster: g0
+- id: papers
+  label: 'papers
+
+    canonical identity
+
+    workflow_state'
+  cluster: g1
+- id: jobs
+  label: 'publication_jobs
+
+    lease + attempts + result
+
+    publication state'
+  cluster: g2
+- id: events
+  label: 'publication_job_events
+
+    transition audit'
+  cluster: g2
+- id: legacy
+  label: 'article_jobs / items
+
+    legacy Codex UI path'
+  cluster: g2
+- id: runs
+  label: 'out/runs/RUN_ID
+
+    source + packet + report + diff'
+  cluster: g3
+- id: git
+  label: 'Content Git / PR
+
+    commit + human review'
+  cluster: g4
+- id: site
+  label: 'Generated site + live check
+
+    external state'
+  cluster: g4
+edges:
+- from: messages
+  to: articles
+  label: one email to candidates
+- from: articles
+  to: papers
+  label: paper_key
+- from: articles
+  to: jobs
+  label: article_key
+- from: jobs
+  to: events
+  label: append transitions
+- from: articles
+  to: legacy
+  label: UI processing path
+- from: jobs
+  to: runs
+  label: run_id / report path
+- from: runs
+  to: git
+  label: optional validated patch
+- from: git
+  to: site
+  label: merge and build
+- from: papers
+  to: git
+  label: PR / commit metadata

@@ -1,0 +1,117 @@
+title: Wikip.co Site Repository Architecture
+direction: LR
+graph_attr:
+  ranksep: "1.05"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: tracked
+    label: Tracked site application
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: fetched
+    label: Ignored build-time material
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: delivery
+    label: Build and delivery outputs
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: config
+    label: "site/_config.yml\nHexo configuration"
+    icon: programming.language.NodeJS
+    cluster: tracked
+  - id: themes
+    label: "site/themes\nwiki and cactus themes"
+    icon: programming.language.NodeJS
+    cluster: tracked
+  - id: data
+    label: "site/source/_data\nsite metadata and resources"
+    icon: generic.storage.Storage
+    cluster: tracked
+  - id: packages
+    label: "package-lock.json\nlocked Node dependencies"
+    icon: programming.language.NodeJS
+    cluster: tracked
+  - id: scripts
+    label: "scripts/prepare-content\nscripts/build-site"
+    icon: onprem.vcs.Git
+    cluster: tracked
+  - id: workflow
+    label: "generator.yml\nsite-owned CI/CD"
+    icon: onprem.ci.GithubActions
+    cluster: tracked
+  - id: dockerfile
+    label: "Dockerfile + compose\ncontainerized site server"
+    icon: onprem.container.Docker
+    cluster: tracked
+  - id: content_checkout
+    label: ".build/content-repo\nexact SHA or main"
+    icon: onprem.vcs.Github
+    cluster: fetched
+  - id: public_checkout
+    label: ".build/public-repo\ntemporary main checkout"
+    icon: onprem.vcs.Github
+    cluster: fetched
+  - id: posts
+    label: "site/source/_posts\nplain copied Markdown"
+    icon: generic.storage.Storage
+    cluster: fetched
+  - id: public_dir
+    label: "public/\nplain Hexo output"
+    icon: generic.storage.Storage
+    cluster: fetched
+  - id: hexo
+    label: "Hexo generate\npermalinks, tags, categories, assets"
+    icon: programming.language.NodeJS
+    cluster: delivery
+  - id: public_repo
+    label: "wikip-co/public\ngenerated Git history"
+    icon: onprem.vcs.Github
+    cluster: delivery
+  - id: image
+    label: "Multi-architecture image\namd64 + arm64"
+    icon: onprem.container.Docker
+    cluster: delivery
+edges:
+  - from: content_checkout
+    to: scripts
+    label: source and Git history
+  - from: scripts
+    to: posts
+    label: rsync and restore mtimes
+  - from: config
+    to: hexo
+  - from: themes
+    to: hexo
+  - from: data
+    to: hexo
+  - from: packages
+    to: hexo
+  - from: posts
+    to: hexo
+  - from: hexo
+    to: public_dir
+    label: generates
+  - from: public_dir
+    to: public_checkout
+    label: rsync --delete
+  - from: public_checkout
+    to: public_repo
+    label: commit and push
+  - from: workflow
+    to: content_checkout
+    label: checkout input
+  - from: workflow
+    to: public_checkout
+    label: checkout output repo
+  - from: dockerfile
+    to: image
+    label: build definition
+  - from: posts
+    to: image
+    label: content baked in

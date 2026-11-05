@@ -1,0 +1,165 @@
+title: Single-pass Research Publisher Production Flow
+direction: LR
+graph_attr:
+  ranksep: "1.0"
+  nodesep: "0.55"
+  pad: "0.5"
+clusters:
+  - id: intake
+    label: Intake paths
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: deterministic
+    label: Deterministic orchestration
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#15803d"
+  - id: judgment
+    label: Single drafting pass
+    graph_attr:
+      bgcolor: "#f5f3ff"
+      color: "#7c3aed"
+  - id: delivery
+    label: Controlled delivery
+    graph_attr:
+      bgcolor: "#fff7ed"
+      color: "#c2410c"
+nodes:
+  - id: adhoc
+    label: "Ad-hoc URL\nlocal-publish URL --domain DOMAIN"
+    icon: onprem.client.User
+    cluster: intake
+  - id: alerts
+    label: "Google Scholar alerts\nGmail ingestion"
+    icon: oci.monitoring.Email
+    cluster: intake
+  - id: queue
+    label: "SQLite publication queue\nselected, unprocessed articles"
+    icon: generic.database.SQL
+    cluster: intake
+  - id: lease
+    label: "Atomic job lease\none worker owns one job"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: scrape
+    label: "Scrape with fallbacks\nproduce validated packet"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: dedupe
+    label: "DOI/URL duplicate check\nbase, paper state, and open PRs\n(explicit A/B bypass available)"
+    icon: onprem.vcs.Git
+    cluster: deterministic
+  - id: match
+    label: "Domain/entity retrieval\nexisting pages + safe new-page seed"
+    icon: programming.language.Python
+    cluster: deterministic
+  - id: backend
+    label: "Draft backend selector\nlocal default; agent explicit"
+    cluster: deterministic
+  - id: lock
+    label: "llama.cpp model lock\nlocal backend only"
+    cluster: deterministic
+  - id: agent
+    label: "Codex / Claude / Grok CLI\nno write or publish authority"
+    cluster: judgment
+  - id: prompt
+    label: "Bounded evidence context\nresults + background; no reference list"
+    cluster: judgment
+  - id: draft
+    label: "One JSON response\nextract claims and map wiki targets"
+    icon: programming.language.Python
+    cluster: judgment
+  - id: gates
+    label: "Deterministic validators\nquote, entity, evidence, render, Git scope"
+    icon: onprem.security.Vault
+    cluster: deterministic
+  - id: worktree
+    label: "Isolated content worktree\nvalidated Markdown only"
+    icon: onprem.vcs.Git
+    cluster: delivery
+  - id: pr
+    label: "Draft pull request\nnever auto-merge"
+    icon: onprem.vcs.Github
+    cluster: delivery
+  - id: review
+    label: "Human editorial review\naccuracy and placement"
+    icon: onprem.client.User
+    cluster: delivery
+  - id: site
+    label: "Merge triggers exact-SHA\nwikip.co build and deployment"
+    icon: saas.cdn.Cloudflare
+    cluster: delivery
+  - id: terminal
+    label: "No publish\nduplicate, needs review, busy, or failed"
+    cluster: delivery
+  - id: artifacts
+    label: "Immutable run directory\nsource, packet, report, patch + telemetry"
+    icon: generic.storage.Storage
+    cluster: delivery
+edges:
+  - from: adhoc
+    to: lease
+    label: immediate dry run or publish
+  - from: alerts
+    to: queue
+    label: parse, score, select
+  - from: queue
+    to: lease
+    label: worker claims next due job
+  - from: lease
+    to: scrape
+  - from: scrape
+    to: dedupe
+  - from: dedupe
+    to: match
+    label: new source or explicit A/B bypass
+  - from: match
+    to: backend
+  - from: backend
+    to: lock
+    label: local default
+  - from: backend
+    to: agent
+    label: explicit frontier CLI
+  - from: lock
+    to: prompt
+  - from: agent
+    to: prompt
+  - from: prompt
+    to: draft
+    label: one request
+  - from: draft
+    to: gates
+    label: one extraction/placement plan
+  - from: gates
+    to: worktree
+    label: all gates pass
+  - from: gates
+    to: artifacts
+    label: record plan and outcome
+    style: dashed
+  - from: worktree
+    to: pr
+    label: publish flag only
+  - from: pr
+    to: review
+  - from: review
+    to: site
+    label: approved and merged
+  - from: scrape
+    to: terminal
+    label: invalid packet
+    style: dashed
+  - from: dedupe
+    to: terminal
+    label: already cited or open PR (default)
+    style: dashed
+  - from: lock
+    to: terminal
+    label: local model busy
+    style: dashed
+  - from: gates
+    to: terminal
+    label: validation outcome
+    style: dashed

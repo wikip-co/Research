@@ -1,0 +1,106 @@
+title: Research repository ownership
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Workspace
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Publication
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Knowledge
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Delivery
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: coord
+  label: 'Research
+
+    workspace + operations docs'
+  cluster: g0
+- id: tools
+  label: 'research-tools
+
+    5 Python packages'
+  cluster: g0
+- id: content
+  label: 'content
+
+    reviewed Markdown'
+  cluster: g1
+- id: site
+  label: 'wikip.co
+
+    Hexo + Actions'
+  cluster: g1
+- id: public
+  label: 'public
+
+    generated HTML'
+  cluster: g1
+- id: wiki
+  label: 'Research/wiki
+
+    tracked project knowledge
+
+    in Research repository'
+  cluster: g2
+- id: index
+  label: 'agent.wikip.co
+
+    cross-project index'
+  cluster: g2
+- id: pages
+  label: 'Cloudflare Pages
+
+    external deployment'
+  cluster: g3
+edges:
+- from: coord
+  to: tools
+  label: workspace sync
+- from: coord
+  to: content
+  label: workspace sync
+- from: coord
+  to: site
+  label: workspace sync
+- from: tools
+  to: content
+  label: draft PR; explicit publish
+- from: content
+  to: site
+  label: dispatch exact SHA
+- from: site
+  to: public
+  label: generated commit
+- from: public
+  to: pages
+  label: external deploy integration
+- from: coord
+  to: wiki
+  label: read first; record findings
+- from: wiki
+  to: index
+  label: summary pointer

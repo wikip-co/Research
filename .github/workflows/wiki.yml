@@ -1,0 +1,37 @@
+name: Research Knowledge Wiki
+on:
+  push:
+    paths: ['wiki/**', '.github/workflows/wiki.yml']
+  pull_request:
+    paths: ['wiki/**', '.github/workflows/wiki.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: wiki/source/.nvmrc
+          cache: npm
+          cache-dependency-path: wiki/source/package-lock.json
+      - run: npm --prefix wiki/source ci
+      - run: npm --prefix wiki/source test
+      - run: node wiki/source/bin/wiki.js lint --all --strict
+      - name: Build and verify local wiki
+        run: |
+          npm --prefix wiki/source run clean
+          npm --prefix wiki/source run build
+          npm --prefix wiki/source run verify
+      - name: Require ordinary source files, not gitlinks
+        run: |
+          if git ls-files --stage wiki | awk '$1 == "160000" { found = 1 } END { exit !found }'; then
+            echo "The project wiki must be tracked source, not a gitlink."
+            exit 1
+          fi

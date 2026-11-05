@@ -1,0 +1,115 @@
+title: 'Proposed learning loop: make review outcomes actionable'
+direction: TB
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Current evidence
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Proposed triage
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Proposed improvement
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Knowledge
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: run
+  label: 'Immutable source / report
+
+    validated attempt'
+  cluster: g0
+- id: reject
+  label: 'Current needs_review
+
+    gate codes retained'
+  cluster: g0
+- id: human
+  label: 'Manual compare quote
+
+    entity + target + validator'
+  cluster: g1
+- id: classify
+  label: 'Classify cause
+
+    model / prompt / retrieval / gate'
+  cluster: g1
+- id: fixture
+  label: 'Add minimal regression
+
+    source + expected behavior'
+  cluster: g2
+- id: change
+  label: 'Scoped change
+
+    one variable at a time'
+  cluster: g2
+- id: replay
+  label: 'Bounded replay
+
+    acceptance + cost metrics'
+  cluster: g2
+- id: decision
+  label: 'Record decision
+
+    keep / revert / defer'
+  cluster: g3
+edges:
+- from: run
+  to: reject
+  label: gate rejects
+- from: reject
+  to: human
+  label: review queue
+  style: dashed
+  color: '#b45309'
+- from: human
+  to: classify
+  label: cause supported by evidence
+  style: dashed
+  color: '#b45309'
+- from: classify
+  to: fixture
+  label: reproducible example
+  style: dashed
+  color: '#b45309'
+- from: fixture
+  to: change
+  label: test before change
+  style: dashed
+  color: '#b45309'
+- from: change
+  to: replay
+  label: same source and baseline
+  style: dashed
+  color: '#b45309'
+- from: replay
+  to: decision
+  label: quality and throughput
+  style: dashed
+  color: '#b45309'
+- from: decision
+  to: run
+  label: next controlled run
+  style: dashed
+  color: '#b45309'

@@ -1,0 +1,107 @@
+title: Flat Local Development and Build-Fetch Model
+direction: LR
+graph_attr:
+  ranksep: "0.9"
+  nodesep: "0.65"
+  pad: "0.5"
+clusters:
+  - id: coordinator
+    label: Research coordinator checkout
+    graph_attr:
+      bgcolor: "#f8fafc"
+      color: "#475569"
+  - id: standalone
+    label: Standalone sibling Git repositories
+    graph_attr:
+      bgcolor: "#eff6ff"
+      color: "#2563eb"
+  - id: materialized
+    label: Ignored build material inside wikip.co
+    graph_attr:
+      bgcolor: "#f0fdf4"
+      color: "#16a34a"
+nodes:
+  - id: clone
+    label: "Clone Research\nno recursive Git options"
+    icon: onprem.vcs.Git
+    cluster: coordinator
+  - id: manifest
+    label: "workspace-repos.tsv\npath, repository, branch"
+    icon: generic.storage.Storage
+    cluster: coordinator
+  - id: helper
+    label: "./workspace sync\nclone missing; FF clean main"
+    icon: onprem.vcs.Git
+    cluster: coordinator
+  - id: verify
+    label: "./workspace verify-layout\nreject nested Git state"
+    icon: onprem.ci.GithubActions
+    cluster: coordinator
+  - id: tools
+    label: "research-tools/.git\nindependent branch and index"
+    icon: programming.language.Python
+    cluster: standalone
+  - id: content
+    label: "content/.git\nindependent branch and index"
+    icon: onprem.vcs.Github
+    cluster: standalone
+  - id: site
+    label: "wikip.co/.git\nindependent branch and index"
+    icon: programming.language.NodeJS
+    cluster: standalone
+  - id: prepare
+    label: "scripts/prepare-content\nuse sibling or managed clone"
+    icon: generic.os.LinuxGeneral
+    cluster: materialized
+  - id: posts
+    label: "site/source/_posts\nplain copied Markdown"
+    icon: generic.storage.Storage
+    cluster: materialized
+  - id: output
+    label: "public/\nplain generated output"
+    icon: generic.storage.Storage
+    cluster: materialized
+  - id: build
+    label: "scripts/build-site\nnpm ci, clean, build"
+    icon: programming.language.NodeJS
+    cluster: materialized
+edges:
+  - from: clone
+    to: manifest
+    label: coordinator contains
+  - from: manifest
+    to: helper
+    label: drives sync
+  - from: helper
+    to: tools
+    label: clone/fetch
+  - from: helper
+    to: content
+    label: clone/fetch
+  - from: helper
+    to: site
+    label: clone/fetch
+  - from: helper
+    to: verify
+    label: verify after sync
+  - from: verify
+    to: tools
+    label: own .git directory
+  - from: verify
+    to: content
+    label: own .git directory
+  - from: verify
+    to: site
+    label: own .git directory
+  - from: content
+    to: prepare
+    label: preferred sibling source
+  - from: prepare
+    to: posts
+    label: rsync without .git
+  - from: posts
+    to: build
+    label: Hexo source
+  - from: build
+    to: output
+    label: generated site

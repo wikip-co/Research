@@ -1,0 +1,19 @@
+**/node_modules
+**/db.json
+docs
+.env
+.env.*
+!.env.example
+.DS_Store
+
+# Only Git's object/ref/index data is needed for build-time article history.
+# Exclude local configuration, credential-bearing remote URLs, hooks and logs.
+.git/*
+!.git/HEAD
+!.git/index
+!.git/objects
+!.git/objects/**
+!.git/refs
+!.git/refs/**
+!.git/packed-refs
+!.git/shallow
