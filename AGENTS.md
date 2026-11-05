@@ -56,3 +56,28 @@ After wiki changes, run its lint, tests, clean/build and link/export checks.
 The root Research Knowledge Wiki CI workflow validates the nested site. Future
 changes should use focused branches and PRs; pushing source is not publishing a
 new external website. Inspect all standalone workspace repo statuses separately.
+
+## Cursor Cloud development
+
+The earlier cloud setup used Git submodules. That layout is historical: use the
+current flat-workspace commands below instead of recursive submodule init or
+committing generated site output.
+
+- Read `docs/README.md`, then run `./workspace sync`, `./workspace validate` and
+  `./workspace verify-layout`. Child repositories keep their own Git history.
+  If a cloud token supports only HTTPS, set `RESEARCH_GIT_PROTOCOL=https` for `./workspace sync`; do not change tracked repository URLs or copy credentials into files.
+- In `research-tools`, follow its README and Python version requirement, run
+  `uv sync --all-packages` and `make test`. `./agent-workflow doctor` checks
+  prerequisites; credential presence does not establish service health.
+- Cloud environments may lack Gmail, Vault, Cloudinary or model access. Use
+  temporary synthetic fixtures for UI tests. Never seed the restored production
+  database or assume a startup script provisioned dependencies or credentials.
+- Follow `research-tools` triage instructions for the current database path,
+  bind address and filters. For review-state rows, use `?status=review`. Any cloud
+  preview exposure requires the intended task scope; preserve loopback defaults.
+- Build the public site using `wikip.co/scripts/build-site` and the publishing
+  runbook. Generated `wikip.co/public` and `site/source/_posts` are ignored build
+  material. The project knowledge wiki at `wiki/` is a separate site.
+
+The original PR's cloud screenshots and test counts are historical observations,
+not verification of today's host or a fresh cloud environment.
