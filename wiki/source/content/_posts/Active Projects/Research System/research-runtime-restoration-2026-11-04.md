@@ -177,4 +177,4 @@ Tests passed: root tooling **2**, Gmail **20**, scraper **14**, publisher **100*
 
 ## Later source-history handoff
 
-The earlier local-only tooling status above is historical: the tested DOI repair was subsequently committed as `9bb79a8` and pushed on `fix/iconium-local-runtime` in research-tools. It remains a branch change pending review; queue fixes were not implemented. The project wiki is now tracked directly in Research and served locally at localhost:4010.
+The earlier local-only tooling status above is historical: the tested DOI repair was subsequently committed as `9bb79a8` and pushed on `fix/iconium-local-runtime` in research-tools. It subsequently merged through research-tools PR #4 on 2026-11-04 (America/Los_Angeles); queue fixes were not implemented. The project wiki is now tracked directly in Research and served locally at localhost:4010.

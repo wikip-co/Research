@@ -1,6 +1,6 @@
 favicon: img/dark_folder.png
 repository_url: "https://github.com/wikip-co/Research"
-branch: analysis/research-visual-review
+branch: main
 content_root: wiki/source/content
 new_post_directory: wiki/source/content/_posts
 new_post_filename: article-title.md

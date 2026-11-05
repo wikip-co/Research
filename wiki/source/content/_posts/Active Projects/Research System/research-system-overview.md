@@ -26,7 +26,7 @@ The project wiki is an ordinary tracked **`Research/wiki/` directory**, included
 | Owner | Purpose | Review boundary |
 | --- | --- | --- |
 | `Research` | Workspace coordination, operating docs, this wiki | Owns cross-repository explanation, not generated public research pages |
-| `research-tools` | Five Python packages, scraping, SQLite queues, planning and Git orchestration | Local DOI repair exists on `fix/iconium-local-runtime`; queue findings are **not fixed** |
+| `research-tools` | Five Python packages, scraping, SQLite queues, planning and Git orchestration | DOI repair merged through research-tools PR #4; queue findings are **not fixed** |
 | `content` | Public research Markdown | Changes require explicit publishing and human PR review |
 | `wikip.co` | Hexo application and GitHub build workflow | Consumes exact dispatched content SHA and writes generated output |
 | `public` | Generated site repository | External Pages integration is distinct from source merge/build |
@@ -57,4 +57,4 @@ Prioritize lease fencing and exhausted-lease recovery before unattended work, th
 
 ## Source branch handoff
 
-The wiki integration is committed on `analysis/research-visual-review` in the existing Research repository. It is reviewable as a pull request; it must be merged before a default-main clone includes it. The source/edit links currently target that branch. After merge, update the source branch setting to main. The DOI repair is separately tracked on `research-tools/fix/iconium-local-runtime`.
+The wiki integration was prepared on `analysis/research-visual-review` in the existing Research repository and submitted as [Research PR #4](https://github.com/wikip-co/Research/pull/4). On 2026-11-04 the owner authorized merging the session PRs after passing checks. Source/edit links now target main for that merge. The DOI repair has merged through [research-tools PR #4](https://github.com/wikip-co/research-tools/pull/4); queue findings remain unfixed.
