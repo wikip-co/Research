@@ -1,0 +1,138 @@
+title: Queue ownership and retry boundaries
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Queue
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Ownership
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Worker
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Failure
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+- id: g4
+  label: Proposed controls
+  graph_attr:
+    bgcolor: '#f8fafc'
+    color: '#94a3b8'
+nodes:
+- id: queued
+  label: Queued / due retry
+  cluster: g0
+- id: claim
+  label: 'BEGIN IMMEDIATE
+
+    claim eligible job'
+  cluster: g1
+- id: leased
+  label: 'Lease owner + expiry
+
+    attempt count increments'
+  cluster: g1
+- id: work
+  label: 'Scrape / match / draft
+
+    validate / publish progress'
+  cluster: g2
+- id: review
+  label: 'needs_review / validated
+
+    stopped; explicit requeue'
+  cluster: g0
+- id: terminal
+  label: 'pr_open / duplicate
+
+    rejected / failed'
+  cluster: g0
+- id: expire
+  label: Lease expires after crash
+  cluster: g3
+- id: reclaim
+  label: 'Another worker reclaims
+
+    if attempts remain'
+  cluster: g3
+- id: stranded
+  label: 'Expired final attempt
+
+    currently stranded active row'
+  cluster: g3
+- id: stale
+  label: 'Stale worker may write
+
+    after owner is cleared'
+  cluster: g3
+- id: fence
+  label: 'Proposed: fencing token
+
+    CAS + stopped-state guard'
+  cluster: g4
+- id: sweep
+  label: 'Proposed: exhausted-lease
+
+    reconciliation'
+  cluster: g4
+edges:
+- from: queued
+  to: claim
+  label: eligible and below max
+- from: claim
+  to: leased
+  label: atomic lease
+- from: leased
+  to: work
+  label: worker begins
+- from: work
+  to: review
+  label: editorial / dry-run stop
+- from: work
+  to: terminal
+  label: resolution
+- from: leased
+  to: expire
+  label: crash or long pause
+- from: expire
+  to: reclaim
+  label: attempt_count < max
+- from: reclaim
+  to: work
+  label: new owner
+- from: expire
+  to: stranded
+  label: attempt_count = max
+- from: review
+  to: stale
+  label: old worker update accepted
+- from: stale
+  to: fence
+  label: prevent with generation check
+  style: dashed
+  color: '#b45309'
+- from: stranded
+  to: sweep
+  label: terminal reconciliation
+  style: dashed
+  color: '#b45309'

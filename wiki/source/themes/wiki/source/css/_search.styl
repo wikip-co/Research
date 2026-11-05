@@ -1,0 +1,55 @@
+.ins-search-input
+    width: 100%
+    padding: 8px
+    border: 1px solid #ddd
+    border-radius: 4px
+    margin-bottom: 10px
+    font: font-size font-sans
+    color: color-default
+
+#local-search-result
+    overflow: auto
+    max-height: 10in
+    background-color: #fff
+    margin-bottom: 10px
+
+.search-result-list
+    padding-left: 10px
+    list-style: none
+    margin: 10px 0
+    li
+        margin-bottom: 12px
+
+.search-result-title
+    font-weight: bold
+    font-size: 140%
+    text-decoration: none
+    color: color-link
+    &:hover
+        color: darken(color-link, 20%)
+
+.search-result-meta
+    font-size: 0.9em
+    color: #666
+    margin-top: 5px
+
+.categories
+    &::before
+        content: "Categories: "
+        font-weight: bold
+
+.tags
+    &::before
+        content: "Tags: "
+        font-weight: bold
+        margin-left: 10px
+
+@media mq-mini
+    .search-result-meta span
+        display: block
+    .tags::before
+        margin-left: 0
+
+.local-search-empty
+    color: #999
+    font-style: italic

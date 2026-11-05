@@ -1,0 +1,110 @@
+title: research-tools package responsibilities
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Entry
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Packages
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Shared
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Runtime
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: entry
+  label: 'agent-workflow
+
+    CLI and environment wiring'
+  cluster: g0
+- id: gmail
+  label: 'gmail-reader
+
+    GWS + SQLite + triage'
+  cluster: g1
+- id: scrape
+  label: 'web-scraper
+
+    HTML / PDF / metadata'
+  cluster: g1
+- id: wiki
+  label: 'wiki-automation
+
+    retrieval + publisher + Git'
+  cluster: g1
+- id: image
+  label: 'image-upload
+
+    Cloudinary + capture'
+  cluster: g1
+- id: core
+  label: 'content-agent-core
+
+    env / HTTP / browser helpers'
+  cluster: g2
+- id: uv
+  label: 'uv workspace
+
+    Python 3.12 lockfile'
+  cluster: g3
+- id: node
+  label: 'GWS + agent-browser
+
+    Node tool environment'
+  cluster: g3
+edges:
+- from: entry
+  to: gmail
+  label: intake / backlog / UI
+- from: entry
+  to: wiki
+  label: search / intake / publish
+- from: wiki
+  to: scrape
+  label: normalized packet
+- from: entry
+  to: image
+  label: image operations
+- from: gmail
+  to: node
+  label: GWS CLI
+- from: scrape
+  to: node
+  label: browser fallback
+- from: image
+  to: node
+  label: capture
+- from: wiki
+  to: core
+  label: shared helpers
+- from: scrape
+  to: core
+  label: shared helpers
+- from: image
+  to: core
+  label: shared helpers
+- from: uv
+  to: entry
+  label: workspace environment

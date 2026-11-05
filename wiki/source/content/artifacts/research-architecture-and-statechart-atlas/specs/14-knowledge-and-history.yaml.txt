@@ -1,0 +1,103 @@
+title: Project knowledge and agent handoff
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Readers
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Entry
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Knowledge
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Code owners
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+- id: g4
+  label: Index
+  graph_attr:
+    bgcolor: '#f8fafc'
+    color: '#94a3b8'
+nodes:
+- id: agent
+  label: Human / future agent
+  cluster: g0
+- id: instructions
+  label: 'Research/AGENTS.md
+
+    read project wiki first'
+  cluster: g1
+- id: wiki
+  label: 'Research/wiki
+
+    tracked project knowledge
+
+    in Research repository'
+  cluster: g2
+- id: atlas
+  label: 'Atlas + source specs
+
+    SVG / PNG / TLC reports'
+  cluster: g2
+- id: findings
+  label: 'Evidence and decisions
+
+    confirmed vs model-only'
+  cluster: g2
+- id: ops
+  label: 'Existing Research docs
+
+    canonical procedures'
+  cluster: g3
+- id: tools
+  label: 'Tooling code + tests
+
+    local modifications explicit'
+  cluster: g3
+- id: index
+  label: 'Central agent wiki
+
+    cross-project pointer'
+  cluster: g4
+edges:
+- from: agent
+  to: instructions
+  label: start task
+- from: instructions
+  to: wiki
+  label: search / context
+- from: wiki
+  to: atlas
+  label: visual walkthrough
+- from: wiki
+  to: findings
+  label: decisions and history
+- from: wiki
+  to: ops
+  label: link; do not duplicate procedures
+- from: findings
+  to: tools
+  label: replayable evidence
+- from: index
+  to: wiki
+  label: local ownership pointer

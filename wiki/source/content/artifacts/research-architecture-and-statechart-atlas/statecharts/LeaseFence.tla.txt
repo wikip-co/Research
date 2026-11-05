@@ -1,0 +1,16 @@
+---- MODULE LeaseFence ----
+EXTENDS Naturals
+CONSTANT Fenced
+VARIABLES phase, owner, stopped, staleWrite
+vars == <<phase,owner,stopped,staleWrite>>
+Init == phase="Queued" /\ owner="none" /\ stopped=FALSE /\ staleWrite=FALSE
+ClaimA == phase="Queued" /\ phase'="A leased" /\ owner'="A" /\ UNCHANGED <<stopped,staleWrite>>
+Expire == phase="A leased" /\ phase'="A lease expired" /\ UNCHANGED <<owner,stopped,staleWrite>>
+ClaimB == phase="A lease expired" /\ phase'="B reclaimed" /\ owner'="B" /\ UNCHANGED <<stopped,staleWrite>>
+StopB == phase="B reclaimed" /\ phase'="B stopped for review" /\ owner'="none" /\ stopped'=TRUE /\ UNCHANGED staleWrite
+StaleA == phase="B stopped for review" /\ ~Fenced /\ owner="none" /\ phase'="Stale A overwrote review" /\ staleWrite'=TRUE /\ UNCHANGED <<owner,stopped>>
+Done == phase \in {"B stopped for review","Stale A overwrote review"} /\ UNCHANGED vars
+Next == ClaimA \/ Expire \/ ClaimB \/ StopB \/ StaleA \/ Done
+Spec == Init /\ [][Next]_vars
+StoppedReviewCannotBeOverwrittenByStaleWorker == ~staleWrite
+====

@@ -1,0 +1,49 @@
+# Sanitized copies of installed host configuration, 2026-11-04.
+# Replace ACCOUNT_NAME and review paths before use. These files do not enable services.
+
+# research-llm.service
+[Unit]
+Description=Research local Qwen3.8 27B inference (Vulkan)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ACCOUNT_NAME/Projects/Research/research-tools
+ExecStart=/home/ACCOUNT_NAME/.local/opt/llama.cpp/llama-b12119/llama-server -m /home/ACCOUNT_NAME/Models/Qwen3.8-27B/Qwen3.8-27B-Q8_0.gguf --alias qwen3.8-27b-q8_0 --host 127.0.0.1 --port 8080 -ngl 99 -c 32768 -np 1 -fa on -ctk q8_0 -ctv q8_0 --reasoning off
+Restart=on-failure
+RestartSec=10
+TimeoutStopSec=60
+
+[Install]
+WantedBy=default.target
+
+# research-triage-ui.service
+[Unit]
+Description=Research SQLite triage UI (local)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/ACCOUNT_NAME/Projects/Research/research-tools
+Environment=PATH=/home/ACCOUNT_NAME/.local/share/mise/installs/node/24.22.1/bin:/home/ACCOUNT_NAME/.local/bin:/usr/local/bin:/usr/bin:/bin
+EnvironmentFile=/home/ACCOUNT_NAME/Projects/Research/research-tools/.env
+ExecStart=/home/ACCOUNT_NAME/Projects/Research/research-tools/agent-workflow triage-ui --host 127.0.0.1 --port 8765
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
+
+# research-tools/runtime/flaresolverr.compose.yml
+services:
+  flaresolverr:
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: research-flaresolverr
+    environment:
+      LOG_LEVEL: info
+      LOG_HTML: "false"
+      CAPTCHA_SOLVER: none
+      TZ: America/Los_Angeles
+    ports:
+      - "127.0.0.1:8191:8191"
+    restart: unless-stopped

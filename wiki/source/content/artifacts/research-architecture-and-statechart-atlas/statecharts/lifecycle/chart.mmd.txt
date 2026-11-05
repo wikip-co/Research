@@ -1,0 +1,56 @@
+---
+title: "Research lifecycle: code path and external delivery boundary"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Stopped
+    lg1: Delivery
+    lg2: Pipeline
+  }
+  class lg0 orange
+  class lg1 teal
+  class lg2 blue
+  s0: Discovered
+  s1: Queued
+  s2: Scraping
+  s3: Matching
+  s4: Needs review
+  s5: Drafting
+  s6: Duplicate
+  s7: Validating
+  s8: Validated draft
+  s9: Draft PR
+  s10: Merged content
+  s11: Site build
+  s12: Build failed
+  s13: Live site (external)
+  [*] --> s0
+  s0 --> s1: select or enqueue
+  s0 --> s2: operator supplies URL
+  s1 --> s2: worker leases or ad-hoc call
+  s2 --> s3: valid source packet
+  s2 --> s4: invalid packet
+  s3 --> s5: select scoped pages
+  s3 --> s6: already cited or open PR
+  s5 --> s7: one JSON planning call
+  s7 --> s4: gate rejects
+  s7 --> s8: all deterministic gates pass
+  s8 --> s9: explicit publish mode
+  s9 --> s10: human approves and merges
+  s10 --> s11: dispatch exact content SHA
+  s11 --> s12: build or delivery fails
+  s11 --> s13: external Pages deployment
+  class s0 blue
+  class s1 blue
+  class s2 blue
+  class s3 blue
+  class s4 orange
+  class s5 blue
+  class s6 blue
+  class s7 blue
+  class s8 blue
+  class s9 blue
+  class s10 teal
+  class s11 teal
+  class s12 orange
+  class s13 teal

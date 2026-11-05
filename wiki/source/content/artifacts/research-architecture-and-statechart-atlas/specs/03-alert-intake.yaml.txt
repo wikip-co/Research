@@ -1,0 +1,106 @@
+title: Scholar intake and human selection
+direction: LR
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Source
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Intake
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Data
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Operators
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: alerts
+  label: 'Google Scholar
+
+    alert email'
+  cluster: g0
+- id: gws
+  label: 'GWS CLI
+
+    OAuth credentials missing'
+  cluster: g0
+- id: sync
+  label: 'gmail-reader sync
+
+    parse + score + classify'
+  cluster: g1
+- id: messages
+  label: 'messages
+
+    mail occurrence records'
+  cluster: g2
+- id: articles
+  label: 'articles
+
+    rank + status + paper key'
+  cluster: g2
+- id: papers
+  label: 'papers
+
+    canonical DOI / PMID / URL'
+  cluster: g2
+- id: triage
+  label: 'Triage UI :8765
+
+    select / reject / review'
+  cluster: g3
+- id: enqueue
+  label: 'Enqueue eligible articles
+
+    active-source dedupe'
+  cluster: g3
+- id: jobs
+  label: 'publication_jobs
+
+    queued'
+  cluster: g2
+edges:
+- from: alerts
+  to: gws
+  label: read only when authenticated
+- from: gws
+  to: sync
+  label: message payload
+- from: sync
+  to: messages
+  label: upsert
+- from: sync
+  to: articles
+  label: candidates
+- from: articles
+  to: papers
+  label: canonical identity
+- from: articles
+  to: triage
+  label: display and edit status
+- from: triage
+  to: enqueue
+  label: selected backlog
+- from: enqueue
+  to: jobs
+  label: bounded creation

@@ -1,0 +1,30 @@
+from pathlib import Path
+from tempfile import TemporaryDirectory
+import sys,json
+import os
+repo=Path(os.environ.get('RESEARCH_ROOT',str(Path.home()/'Projects/Research')))
+sys.path.insert(0,str(repo/'research-tools/gmail-reader'))
+from gmail_reader.app import ensure_db,utc_now_iso,enqueue_publication_job,claim_publication_job,set_publication_job_state
+
+def seed(db,max_attempts=3):
+ c=ensure_db(db);now=utc_now_iso()
+ c.execute("INSERT INTO messages(message_id,thread_id,raw_json,imported_at) VALUES ('synthetic','synthetic','{}',?)",(now,))
+ c.execute("INSERT INTO articles(article_key,message_id,alert_name,rank_in_email,title,article_url,score,status,reasons_json,created_at,updated_at) VALUES ('synthetic','synthetic','Synthetic',1,'Synthetic paper','https://example.org/synthetic',20,'selected','[]',?,?)",(now,now));c.commit();c.close()
+ return enqueue_publication_job(db_path=db,identifier='synthetic',max_attempts=max_attempts)['job']['job_id']
+with TemporaryDirectory() as t:
+ db=Path(t)/'queue.db';j=seed(db)
+ claim_publication_job(db_path=db,worker='worker-A',lease_seconds=60)
+ c=ensure_db(db);c.execute("UPDATE publication_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE job_id=?",(j,));c.commit();c.close()
+ claim_publication_job(db_path=db,worker='worker-B',lease_seconds=60)
+ set_publication_job_state(db_path=db,job_id=j,worker='worker-B',state='needs_review')
+ r=set_publication_job_state(db_path=db,job_id=j,worker='worker-A',state='pr_open',pr='https://example.org/synthetic-pr')
+ assert r['job']['state']=='pr_open'
+ print(json.dumps({'case':'stale_worker_updates_stopped_job','confirmed':True,'path':['A leases','lease expires','B reclaims','B records needs_review and clears owner','A overwrites state with pr_open'],'production_database_touched':False}))
+with TemporaryDirectory() as t:
+ db=Path(t)/'queue.db';j=seed(db,max_attempts=1)
+ claim_publication_job(db_path=db,worker='worker-A',lease_seconds=60)
+ c=ensure_db(db);c.execute("UPDATE publication_jobs SET lease_expires_at='2000-01-01T00:00:00Z' WHERE job_id=?",(j,));c.commit();c.close()
+ r=claim_publication_job(db_path=db,worker='worker-B',lease_seconds=60)
+ c=ensure_db(db);s=c.execute('SELECT state,attempt_count,max_attempts FROM publication_jobs WHERE job_id=?',(j,)).fetchone();c.close()
+ assert not r['claimed'] and s['state']=='leased'
+ print(json.dumps({'case':'final_attempt_crash_strands_expired_lease','confirmed':True,'state':s['state'],'attempt_count':s['attempt_count'],'max_attempts':s['max_attempts'],'production_database_touched':False}))

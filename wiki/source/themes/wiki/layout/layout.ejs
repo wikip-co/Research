@@ -1,0 +1,39 @@
+<%- partial('common/head') %>
+<body data-recent-days="<%= (theme.freshness && theme.freshness.recent_days) || 7 %>">
+    <div id="container">
+        <div class="outer">
+            <section id="main">
+                <div class="widget-wrap">
+                    <h3 class="widget-title">
+                        <span class="widget-search-icon" aria-hidden="true"><i class="fa fa-search"></i></span>
+                        <button id="index-toggle" class="widget-tab" type="button" aria-controls="categories" aria-expanded="false">Index</button>
+                        <button id="keyword-toggle" class="widget-tab" type="button" aria-controls="tags" aria-expanded="false">Keywords</button>
+                        <a class="widget-link" href="<%- url_for(config.archive_dir + '/') %>"<%- is_archive() ? ' aria-current="page"' : '' %>>All articles</a>
+                        <button id="allExpand" class="widget-expand" type="button" aria-controls="categories" aria-expanded="<%= Boolean(theme.customize.category_perExpand) %>" aria-label="<%= theme.customize.category_perExpand ? 'Collapse all categories' : 'Expand all categories' %>" hidden>
+                            <i class="fa fa-angle-double-<%- theme.customize.category_perExpand ? 'up' : 'down' %> fa-2x" aria-hidden="true"></i>
+                        </button>
+                    </h3>
+                    <% if (page.path !== 'index.html') { %>
+                        <a href="<%- url_for() %>">↶ Return</a>
+                    <% } %>
+                    <%- partial('common/search') %>
+                    <br>
+                    <label class="screen-reader-text" for="local-search-input">Search articles</label>
+                    <input id="local-search-input" type="search" class="ins-search-input" placeholder="Search articles...  (press / to focus)" data-search-index="<%- url_for('search.json') %>" aria-controls="local-search-result" aria-describedby="search-help" autocomplete="off">
+                    <p id="search-help" class="search-help" hidden>
+                        Every word must match. Use <code>"exact phrase"</code>, <code>-exclude</code>, <code>tag:Documentation</code>, <code>in:"Active Projects"</code> or <code>title:overview</code>. Use ↑ ↓ and Enter to open a result.
+                    </p>
+                    <div id="local-search-result" role="status" aria-live="polite"></div>
+                    <div id="tags" class="tagcloud" hidden><%- tagcloud(site.tags, {min_font: 22, max_font: 42}) %></div>
+                    <div id="categories" hidden>
+                        <%- partial('common/index-tree') %>
+                    </div>
+                </div>
+                <%- body %>
+                <%- partial('common/footer') %>
+            </section>
+        </div>
+        <%- partial('common/scripts') %>
+    </div>
+</body>
+</html>

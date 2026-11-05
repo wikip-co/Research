@@ -8,6 +8,8 @@ child repositories as submodules.
 
 Start with:
 
+- [Project knowledge wiki](wiki/README.md) — current system map, statecharts, findings, decisions and history; source is tracked here and the site runs locally on port 4010.
+
 - [Production operations](docs/research-production-operations.md) — daily
   administration, ad-hoc URLs, passive queues, services, backups, local LLM,
   activation, and troubleshooting.

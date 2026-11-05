@@ -1,0 +1,25 @@
+---
+title: "Publication job: expired worker versus review stop"
+---
+stateDiagram-v2
+  state "Legend" as legend {
+    lg0: Human review
+    lg1: Worker lifecycle
+  }
+  class lg0 orange
+  class lg1 blue
+  s0: Queued
+  s1: A leased
+  s2: A lease expired
+  s3: B reclaimed
+  s4: B stopped for review
+  [*] --> s0
+  s0 --> s1: A claims job
+  s1 --> s2: A lease expires
+  s2 --> s3: B reclaims job
+  s3 --> s4: B stops#59; lease owner cleared
+  class s0 blue
+  class s1 blue
+  class s2 blue
+  class s3 blue
+  class s4 orange

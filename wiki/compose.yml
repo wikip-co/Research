@@ -1,0 +1,14 @@
+services:
+  wiki:
+    build: .
+    image: agent-wiki:local
+    ports:
+      - "${WIKI_BIND_ADDRESS:-127.0.0.1}:${WIKI_PORT:-8080}:8080"
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777,noexec,nosuid
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
