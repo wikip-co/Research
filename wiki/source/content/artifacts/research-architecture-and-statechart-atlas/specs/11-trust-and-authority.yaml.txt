@@ -1,0 +1,110 @@
+title: 'Authority boundaries: proposal versus side effects'
+direction: TB
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Untrusted input
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Validation
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Proposal
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Authority
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+- id: g4
+  label: Secrets
+  graph_attr:
+    bgcolor: '#f8fafc'
+    color: '#94a3b8'
+- id: g5
+  label: Outputs
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+nodes:
+- id: web
+  label: 'Untrusted publisher HTML
+
+    PDF and metadata'
+  cluster: g0
+- id: packet
+  label: Validated normalized packet
+  cluster: g1
+- id: llm
+  label: 'Model proposes JSON
+
+    no file-write authority'
+  cluster: g2
+- id: validators
+  label: 'Deterministic identity
+
+    evidence + placement gates'
+  cluster: g3
+- id: worker
+  label: 'Publisher owns writes
+
+    worktree / commit / PR'
+  cluster: g3
+- id: human
+  label: Human owns merge approval
+  cluster: g3
+- id: secrets
+  label: 'Vault / OAuth / GitHub
+
+    local credentials only'
+  cluster: g4
+- id: source
+  label: Public research content
+  cluster: g5
+- id: knowledge
+  label: 'Project evidence wiki
+
+    no raw mail / credentials'
+  cluster: g5
+edges:
+- from: web
+  to: packet
+  label: reject interstitials
+- from: packet
+  to: llm
+  label: bounded excerpts
+- from: llm
+  to: validators
+  label: untrusted proposal
+- from: validators
+  to: worker
+  label: all gates required
+- from: worker
+  to: human
+  label: draft PR
+- from: human
+  to: source
+  label: merge reviewed content
+- from: secrets
+  to: worker
+  label: scoped runtime access
+- from: worker
+  to: knowledge
+  label: sanitized findings only

@@ -1,0 +1,6 @@
+export const title="Research lifecycle: code path and external delivery boundary";
+export const state=v=>v.phase;
+export const group=v=>v.phase==="Needs review"||v.phase==="Build failed"?"Stopped":v.approved?"Delivery":"Pipeline";
+export const colors={Stopped:"orange",Delivery:"teal",Pipeline:"blue"};
+const words={Intake:"select or enqueue",AdHoc:"operator supplies URL",Acquire:"worker leases or ad-hoc call",PacketAccepted:"valid source packet",PacketRejected:"invalid packet",Duplicate:"already cited or open PR",Draft:"select scoped pages",Validate:"one JSON planning call",Reject:"gate rejects",Pass:"all deterministic gates pass",OpenDraft:"explicit publish mode",HumanMerge:"human approves and merges",Dispatch:"dispatch exact content SHA",Deploy:"external Pages deployment",BuildFail:"build or delivery fails"};
+export const step=a=>a==="Done"?null:words[a]??a;

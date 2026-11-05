@@ -1,0 +1,6 @@
+export const title="Publication job: expired worker versus review stop";
+export const state=v=>v.phase;
+export const group=v=>v.staleWrite?"Violation":v.stopped?"Human review":"Worker lifecycle";
+export const colors={Violation:"pink","Human review":"orange","Worker lifecycle":"blue"};
+const words={ClaimA:"A claims job",Expire:"A lease expires",ClaimB:"B reclaims job",StopB:"B stops; lease owner cleared",StaleA:"A writes using stale ownership"};
+export const step=a=>a==="Done"?null:words[a]??a;

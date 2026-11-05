@@ -1,0 +1,60 @@
+diff --git i/web-scraper/main.py w/web-scraper/main.py
+index 00d12b5..ef537d5 100644
+--- i/web-scraper/main.py
++++ w/web-scraper/main.py
+@@ -1110 +1109,0 @@ def enrich_metadata(data: dict[str, Any]) -> dict[str, Any]:
+-        str(data.get("body_markdown", ""))[:5000],
+@@ -1371,0 +1371,10 @@ def extract_article_data(url: str, raw_html: str, retrieval_backend: str) -> dic
++    # A DOI in a bibliography identifies a cited work, not this article.
++    # Prefer explicit metadata/URL and DOI-labelled elements outside references;
++    # title-based enrichment can recover missing identifiers conservatively.
++    identity_soup = BeautifulSoup(raw_html, "html.parser")
++    for references in list(
++        identity_soup.select(
++            '.ref-list, .references, [role="doc-bibliography"], [id^="ref-list"]'
++        )
++    ):
++        references.decompose()
+@@ -1374 +1383,2 @@ def extract_article_data(url: str, raw_html: str, retrieval_backend: str) -> dic
+-        *selector_texts(soup, '[class*="doi"]'),
++        *meta_values(soup, "name", "dc.identifier"),
++        *meta_values(soup, "name", "DC.Identifier"),
+@@ -1376 +1386 @@ def extract_article_data(url: str, raw_html: str, retrieval_backend: str) -> dic
+-        raw_html,
++        *selector_texts(identity_soup, '[class*="doi"]'),
+diff --git i/web-scraper/tests/test_helpers.py w/web-scraper/tests/test_helpers.py
+index f5b618d..0ecd5de 100644
+--- i/web-scraper/tests/test_helpers.py
++++ w/web-scraper/tests/test_helpers.py
+@@ -71,0 +72,31 @@ class WebScraperHelperTests(unittest.TestCase):
++    def test_reference_doi_is_not_assigned_to_article_without_doi(self) -> None:
++        html = """
++        <html><head><meta name="citation_title" content="A honey review"></head>
++        <body><h1>A honey review</h1><p>Introduction and article text.</p>
++        <section class="ref-list"><p class="doi">10.1000/cited-paper</p>
++        <a href="https://doi.org/10.1000/cited-paper">DOI</a></section>
++        </body></html>
++        """
++        with (
++            patch.object(main, "fetch_crossref_metadata", return_value={}),
++            patch.object(main, "fetch_pubmed_metadata", return_value={}),
++            patch.object(main, "fetch_unpaywall_metadata", return_value={}),
++        ):
++            data = main.extract_article_data("https://example.org/review", html, "fixture")
++        self.assertEqual(data["doi"], "")
++
++    def test_enrichment_does_not_infer_identity_from_body_citations(self) -> None:
++        data = {
++            "title": "A honey review",
++            "url": "https://example.org/review",
++            "body_markdown": "An earlier study (10.1000/cited-paper) was cited.",
++        }
++        with (
++            patch.object(main, "fetch_crossref_metadata", return_value={}) as crossref,
++            patch.object(main, "fetch_pubmed_metadata", return_value={}),
++            patch.object(main, "fetch_unpaywall_metadata", return_value={}),
++        ):
++            main.enrich_metadata(data)
++        self.assertEqual(data["doi"], "")
++        crossref.assert_called_once_with("", "A honey review")
++

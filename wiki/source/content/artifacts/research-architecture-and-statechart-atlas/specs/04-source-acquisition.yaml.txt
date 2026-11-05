@@ -1,0 +1,110 @@
+title: Source acquisition and identity gate
+direction: TB
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Source
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Retrieval
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Identity
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Validation
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: input
+  label: Original URL / PDF
+  cluster: g0
+- id: canonical
+  label: 'Canonicalize URL
+
+    retain requested source'
+  cluster: g0
+- id: scrapling
+  label: Scrapling / Patchright
+  cluster: g1
+- id: flare
+  label: FlareSolverr :8191
+  cluster: g1
+- id: browser
+  label: agent-browser fallback
+  cluster: g1
+- id: pdf
+  label: pypdf extraction
+  cluster: g1
+- id: metadata
+  label: 'Crossref + PubMed
+
+    optional Unpaywall'
+  cluster: g2
+- id: packet
+  label: 'Research packet
+
+    text + metadata + provenance'
+  cluster: g2
+- id: gate
+  label: 'Reject CAPTCHA / errors
+
+    DOI-title mismatch'
+  cluster: g3
+- id: stop
+  label: 'Stop for review
+
+    never treat length as proof'
+  cluster: g3
+edges:
+- from: input
+  to: canonical
+  label: URL
+- from: input
+  to: pdf
+  label: PDF path / URL
+- from: canonical
+  to: scrapling
+  label: HTML
+- from: scrapling
+  to: flare
+  label: weak / blocked response
+- from: flare
+  to: browser
+  label: fallback if needed
+- from: scrapling
+  to: metadata
+  label: valid extraction
+- from: browser
+  to: metadata
+  label: valid extraction
+- from: pdf
+  to: metadata
+  label: metadata enrichment
+- from: metadata
+  to: packet
+  label: consistent identity
+- from: packet
+  to: gate
+  label: always validate
+- from: gate
+  to: stop
+  label: invalid packet

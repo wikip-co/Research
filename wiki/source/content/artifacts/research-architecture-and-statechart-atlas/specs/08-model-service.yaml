@@ -1,0 +1,97 @@
+title: Local inference runtime and prompt boundary
+direction: TB
+graph_attr:
+  ranksep: '0.85'
+  nodesep: '0.45'
+  fontsize: '20'
+  fontname: sans-serif
+  bgcolor: white
+node_attr:
+  fontname: sans-serif
+  fontsize: '13'
+edge_attr:
+  fontname: sans-serif
+  fontsize: '10'
+clusters:
+- id: g0
+  label: Caller
+  graph_attr:
+    bgcolor: '#eff6ff'
+    color: '#94a3b8'
+- id: g1
+  label: Runtime
+  graph_attr:
+    bgcolor: '#f0fdf4'
+    color: '#94a3b8'
+- id: g2
+  label: Hardware
+  graph_attr:
+    bgcolor: '#fff7ed'
+    color: '#94a3b8'
+- id: g3
+  label: Evidence
+  graph_attr:
+    bgcolor: '#faf5ff'
+    color: '#94a3b8'
+nodes:
+- id: publisher
+  label: Research publisher
+  cluster: g0
+- id: lock
+  label: 'OS model lock
+
+    fail fast if busy'
+  cluster: g0
+- id: prompt
+  label: 'Bounded JSON prompt
+
+    source + candidate sections'
+  cluster: g0
+- id: api
+  label: 'llama-server :8080/v1
+
+    one slot; 32K context'
+  cluster: g1
+- id: qwen
+  label: 'Qwen3.8 27B Q8
+
+    reasoning off; no MTP'
+  cluster: g1
+- id: vulkan
+  label: Vulkan / Mesa RADV
+  cluster: g2
+- id: gpu
+  label: 'Radeon 8060S
+
+    shared physical RAM'
+  cluster: g2
+- id: report
+  label: 'Token / duration / finish
+
+    telemetry in run report'
+  cluster: g3
+edges:
+- from: publisher
+  to: lock
+  label: acquire
+- from: lock
+  to: prompt
+  label: exclusive model phase
+- from: prompt
+  to: api
+  label: chat completions JSON
+- from: api
+  to: qwen
+  label: load GGUF
+- from: qwen
+  to: vulkan
+  label: GPU offload
+- from: vulkan
+  to: gpu
+  label: compute and memory
+- from: api
+  to: report
+  label: usage + result
+- from: report
+  to: publisher
+  label: parse and validate

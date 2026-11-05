@@ -1,0 +1,47 @@
+<%
+    let title = '';
+    switch (type) {
+        case 'category':
+            title = page.category;
+            break;
+        case 'tag':
+            title = String(page.tag);
+            break;
+    }
+    const description = site.data.description && site.data.description[title];
+    const articles = page.posts.map(function (post) { return wiki_article(post); }).filter(Boolean)
+        .sort(function (a, b) { return String(b.updated).localeCompare(String(a.updated)); });
+%>
+<div class="timeline timeline-wrap">
+    <div class="timeline-row timeline-row-major">
+        <span class="node"><i class="fa fa-book"></i></span>
+        <div class="content">
+        <h1>Displaying <b><%= articles.length %></b> item(s) related to <b>"<%= title %>"</b>, most recently updated first</h1>
+        <% if (description) { %>
+            <div class="article-meta"><%= description %></div>
+        <% } %>
+        </div>
+    </div>
+    <% articles.forEach(function (article) { %>
+        <div class="timeline-row">
+            <span class="node"></span>
+            <div class="content">
+                <h1 itemprop="name">
+                    <b><a class="timeline-article-title" href="<%- article.href %>"><%= article.title %></a></b>
+                    <span class="fresh-badge" data-created="<%= article.created %>" data-updated="<%= article.updated %>" hidden></span>
+                    <% if (article.status) { %><span class="status-badge"><%= article.status %></span><% } %>
+                </h1>
+                <% if (article.description) { %><p class="timeline-description"><%= article.description %></p><% } %>
+                <div class="article-meta">
+                    <div class="article-dates">Updated <%- wiki_time(article.updated, { relative: 'append' }) %> · <%= article.revisions %> revision<%= article.revisions === 1 ? '' : 's' %></div>
+                    <% if (article.categories.length) { %>
+                        <div class="article-category">Category: <a href="<%- article.category_href %>"><%= article.categories.join(' › ') %></a></div>
+                    <% } %>
+                    <% if (article.tag_links.length) { %>
+                        <div class="article-tag">Keywords: <% article.tag_links.forEach(function (tag, index) { %><%- index ? ', ' : '' %><a class="tag-link" href="<%- tag.href %>"><%= tag.name %></a><% }); %></div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    <% }); %>
+</div>
