@@ -65,8 +65,7 @@ committing generated site output.
 
 - Read `docs/README.md`, then run `./workspace sync`, `./workspace validate` and
   `./workspace verify-layout`. Child repositories keep their own Git history.
-  If a cloud token supports only HTTPS, use the documented workspace URL rewrite
-  option; do not change tracked repository URLs or copy credentials into files.
+  If a cloud token supports only HTTPS, set `RESEARCH_GIT_PROTOCOL=https` for `./workspace sync`; do not change tracked repository URLs or copy credentials into files.
 - In `research-tools`, follow its README and Python version requirement, run
   `uv sync --all-packages` and `make test`. `./agent-workflow doctor` checks
   prerequisites; credential presence does not establish service health.
