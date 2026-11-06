@@ -1,0 +1,155 @@
+{
+  "source": "https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro",
+  "revision": "b189ec765aa7ed75c8acfea42df31fdae71f97be",
+  "parquet_sha256": "0e24a191921c2f453518a537a8b2117bd137e7714d4ef1565e9ba06c1ecb9ad8",
+  "sample_sha256": "8969bea4950ccb46ea8982751ec10518db38c6cc5e8acecac0ab86094d371e1e",
+  "seed": 20261106,
+  "method": "random.Random(seed); sample 12 from each full category in biology, health, chemistry order; shuffle concatenated sample",
+  "protocol": "Direct JSON answer; zero-shot; temperature zero; no answer key or supplied reasoning in requests",
+  "question_ids": [
+    {
+      "id": 4004,
+      "category": "chemistry"
+    },
+    {
+      "id": 6704,
+      "category": "health"
+    },
+    {
+      "id": 6321,
+      "category": "health"
+    },
+    {
+      "id": 6284,
+      "category": "health"
+    },
+    {
+      "id": 4277,
+      "category": "chemistry"
+    },
+    {
+      "id": 6139,
+      "category": "health"
+    },
+    {
+      "id": 6224,
+      "category": "health"
+    },
+    {
+      "id": 3939,
+      "category": "chemistry"
+    },
+    {
+      "id": 6599,
+      "category": "health"
+    },
+    {
+      "id": 4522,
+      "category": "chemistry"
+    },
+    {
+      "id": 3224,
+      "category": "biology"
+    },
+    {
+      "id": 2815,
+      "category": "biology"
+    },
+    {
+      "id": 6143,
+      "category": "health"
+    },
+    {
+      "id": 3473,
+      "category": "biology"
+    },
+    {
+      "id": 2942,
+      "category": "biology"
+    },
+    {
+      "id": 2855,
+      "category": "biology"
+    },
+    {
+      "id": 4593,
+      "category": "chemistry"
+    },
+    {
+      "id": 3140,
+      "category": "biology"
+    },
+    {
+      "id": 6118,
+      "category": "health"
+    },
+    {
+      "id": 3441,
+      "category": "biology"
+    },
+    {
+      "id": 3684,
+      "category": "chemistry"
+    },
+    {
+      "id": 6671,
+      "category": "health"
+    },
+    {
+      "id": 6352,
+      "category": "health"
+    },
+    {
+      "id": 2811,
+      "category": "biology"
+    },
+    {
+      "id": 4566,
+      "category": "chemistry"
+    },
+    {
+      "id": 3091,
+      "category": "biology"
+    },
+    {
+      "id": 6178,
+      "category": "health"
+    },
+    {
+      "id": 2896,
+      "category": "biology"
+    },
+    {
+      "id": 6027,
+      "category": "health"
+    },
+    {
+      "id": 3531,
+      "category": "chemistry"
+    },
+    {
+      "id": 4024,
+      "category": "chemistry"
+    },
+    {
+      "id": 3495,
+      "category": "biology"
+    },
+    {
+      "id": 3046,
+      "category": "biology"
+    },
+    {
+      "id": 3537,
+      "category": "chemistry"
+    },
+    {
+      "id": 3672,
+      "category": "chemistry"
+    },
+    {
+      "id": 4573,
+      "category": "chemistry"
+    }
+  ]
+}

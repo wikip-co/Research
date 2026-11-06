@@ -10,9 +10,17 @@ tags:
 
 ## Current state
 
-**Evidence date: 2026-11-04, America/Los_Angeles.** This is the knowledge home for the Research workspace: a coordinator plus the independent `research-tools`, `content` and `wikip.co` repositories. The local Qwen3.8 27B Vulkan endpoint, FlareSolverr and restored SQLite triage UI work. A real-paper draft completed but was stopped by editorial gates. Gmail/Cloudinary credentials and unattended operation remain unresolved. No research content was published by this review.
+**Inference verified 2026-11-06; restoration verified 2026-11-04, America/Los_Angeles.** This is the knowledge home for the Research coordinator and its independent `research-tools`, `content`, and `wikip.co` repositories. The selected local endpoint now uses Qwen3.8 Flash Next UD-Q4_K_XL on Vulkan with MTP, 32K context, and one slot. A controlled cold publisher request passes in 31 seconds.
+
+The 2026-11-04 restoration verified FlareSolverr, the SQLite copy, and the triage UI. Its real-paper draft stopped at editorial gates. That record described unresolved Gmail/Cloudinary credentials and unattended operation. The later inference work processed no backlog and published no research content.
 
 The project wiki is an ordinary tracked **`Research/wiki/` directory**, included when the `analysis/research-visual-review` branch (or a later main containing it) is cloned. It is not a submodule or a separate Git repository. The site is available on the LAN at [iconium:4010](http://iconium:4010/) following the owner’s LAN-access request on 2026-11-04; GitHub stores source/history, not a deployed wiki. No GitHub Pages or external wiki hosting is configured.
+
+## Inference update, 2026-11-06
+
+The owner requested stronger models and a balanced latency target after increasing the BIOS GPU reservation to 96 GiB. {% post_link "Research Inference Tuning with a 96 GiB GPU Reservation" %} records the controlled tests, loading failures, source-accuracy checks, and chosen Flash Next Vulkan/MTP profile. The endpoint remains loopback-only. The publisher's deterministic validator remains in force.
+
+Later on November 6, the owner requested a temporary model shutdown for Halo Infinite. The unit reached `inactive/dead`, releasing about 80.84 GiB of GPU memory. The model remains selected but stopped until an operator restarts it. The tuning article records the evidence and recovery link.
 
 ## Start a walkthrough
 
@@ -36,7 +44,7 @@ The state of an alert occurrence, a canonical paper, a publishing job and a live
 
 ## Operating boundaries
 
-The model and triage user units were started manually and remain disabled for automatic login start. FlareSolverr uses Docker `unless-stopped`. The NAS was mounted read-only for recovery through a transient mount; the live SQLite copy is local. Scholar-sync and automatic publisher timers are not enabled. The old ROCm/MTP/262K-context service has not been reproduced: the baseline is Vulkan, 32K context and one slot.
+The model and triage user units were started manually and remain disabled for automatic login start. FlareSolverr uses Docker `unless-stopped`. The NAS was mounted read-only for recovery through a transient mount; the live SQLite copy is local. Scholar-sync and automatic publisher timers are not enabled. The historical 262K-context Toolbx service has not been reproduced. The 2026-11-06 default uses Flash Next on Vulkan with MTP, 32K context, and one slot. Original BF16 27B also passed separate ROCm tests.
 
 The queue model found a stale-worker overwrite path and an expired final-attempt lease that cannot be reclaimed. Both were replayed with real queue functions and synthetic temporary records; no production database row was modified. These are function-level proofs, not evidence that the restored production backlog has suffered those interleavings.
 
@@ -53,7 +61,7 @@ Record dated observations, source revisions, decisions and owners. Update the ow
 
 ## Next decisions
 
-Prioritize lease fencing and exhausted-lease recovery before unattended work, then inspect the real-paper editorial rejection with its source/target evidence. Restore credentials only through approved secure mechanisms. Choose success metrics that distinguish runs, validated drafts, open PRs, merged pages and verified live delivery. No model swap, validator relaxation, public hosting or auto-merge policy is approved by this review.
+Prioritize lease fencing and exhausted-lease recovery before unattended work, then inspect the real-paper editorial rejection with its source/target evidence. Restore credentials only through approved secure mechanisms. Choose success metrics that distinguish runs, validated drafts, open PRs, merged pages and verified live delivery. The later inference work is recorded in the 2026-11-06 update above. Public hosting and auto-merge are outside that work.
 
 ## Source branch handoff
 

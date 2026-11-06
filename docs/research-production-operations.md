@@ -143,7 +143,7 @@ The former multi-pass planner, placement/evidence critics, and balance repair
 remain available only through `--pipeline legacy` to reproduce older reports.
 Legacy critic flags do not alter the default `simple` path.
 
-## Current iconium runtime
+## Historical iconium runtime (2026-08-19)
 
 Observed on 2026-08-19:
 
@@ -169,9 +169,87 @@ Because the active llama server uses `-np 1`, the publisher takes an OS lock
 before its model request. An overlapping run fails quickly as
 `local_model_busy` instead of waiting inside a 600-second HTTP timeout.
 
+## Current Iconium inference runtime (2026-11-06)
+
+The August Toolbx configuration above is historical. After the owner increased
+the BIOS GPU reservation to 96 GiB, the Omarchy host was tested with Vulkan and
+ROCm. The measured comparisons and limitations are in the Research wiki article
+[Research Inference Tuning with a 96 GiB GPU Reservation](http://iconium:4010/research-inference-tuning-with-a-96-gib-gpu-reservation/).
+
+The selected `research-llm.service` runs Qwen3.8 Flash Next UD-Q4_K_XL on
+llama.cpp b12144 Vulkan, with its matching self-contained Q8 MTP head. It uses
+32K context, one slot, Q8 K/V caches, flash attention, four CPU threads, memory
+mapping, explicit lazy loading, and two draft tokens. It binds only
+`127.0.0.1:8080`. Its model ID is `qwen3.8-flash-next-ud-q4_k_xl-mtp`.
+
+The host profile is
+`~/.config/systemd/user/research-llm.service.d/90-inference-tuning.conf`.
+It limits host memory to 18 GiB and disables swap for this unit. The original
+base unit is retained. `research-tools/.env` selects the matching model ID;
+other environment settings and file permissions are preserved. The service is
+started manually and remains disabled for automatic login start.
+
+```bash
+systemctl --user status research-llm.service
+curl --fail http://127.0.0.1:8080/health
+curl --fail http://127.0.0.1:8080/v1/models
+journalctl --user -u research-llm.service -n 50 --no-pager
+```
+
+After stopping the model, start it again with
+`systemctl --user start research-llm.service`. Before testing another server on
+port 8080, stop the active model unit. Run comparison requests on a spare
+loopback port and use the tooling repository's [synthetic benchmark
+procedure](../research-tools/docs/local-research-publisher.md#benchmark-the-local-model).
+Do not run large GPU models concurrently on this host.
+
+### Temporary gaming stop
+
+Stop the selected model before a demanding game when GPU memory is needed:
+
+```bash
+systemctl --user stop research-llm.service
+systemctl --user show research-llm.service -p ActiveState -p SubState -p UnitFileState
+pgrep -a -x llama-server
+```
+
+On November 6, 2026, the unit reached `inactive/dead`, and the process and
+port 8080 listener disappeared. Total GPU VRAM use fell from about 82.15 GiB
+to 1.31 GiB. The existing disabled startup policy and model profile were unchanged.
+The local model endpoint is unavailable while stopped. A successful Halo run
+after this intervention was not verified, and memory contention is not a proven
+cause of the earlier Wine crash.
+
+After gaming, restore the selected model:
+
+```bash
+systemctl --user start research-llm.service
+systemctl --user status research-llm.service --no-pager
+curl --fail http://127.0.0.1:8080/health
+curl --fail http://127.0.0.1:8080/v1/models
+```
+
+This recovery sequence was recorded without restarting the model during gaming.
+An empty `pgrep` result while stopped normally exits with status 1.
+
+### Restore the earlier profile
+
+The original unit backup and tested commands are retained under
+`~/Work/inference-benchmark-2026-11-05/`. To restore the earlier service, disable
+only the new profile drop-in, restore `LOCAL_LLM_MODEL` to
+`qwen3.8-27b-q8_0`, reload the user daemon, and restart the model. Do not remove
+unrelated drop-ins. The old model files and b12119 Vulkan build are retained.
+
+Original BF16 27B and locally converted FP16 27B files are also installed and
+tested. ROCm is useful for the BF16 model. The Flash Next ROCm trial encountered
+a kernel SVM resident-memory limit while mapping its large table, so the
+selected Flash Next profile uses Vulkan. This does not establish that every
+ROCm model is affected. No kernel parameter or BIOS change is required by the
+selected tested profile.
+
 ## First-line health checks
 
-Run from `~/Research/research-tools` unless noted:
+Run from `~/Projects/Research/research-tools` unless noted:
 
 ```bash
 ./agent-workflow doctor
@@ -188,7 +266,7 @@ Inspect logs without following indefinitely:
 ```bash
 journalctl --user -u research-triage-ui.service -n 100 --no-pager
 journalctl --user -u research-db-backup.service -n 100 --no-pager
-journalctl --user -u qwen38-server-q8.service -n 100 --no-pager
+journalctl --user -u research-llm.service -n 100 --no-pager
 ```
 
 After the optional timers are installed, use the same commands with
@@ -199,10 +277,10 @@ After the optional timers are installed, use the same commands with
 The important environment defaults are:
 
 ```text
-GMAIL_READER_DB=~/Research/research-tools/gmail-reader/data/scholar-alerts.db
-CONTENT_REPO_ROOT=~/Research/content
+GMAIL_READER_DB=~/Projects/Research/research-tools/runtime/gmail-reader/scholar-alerts.db
+CONTENT_REPO_ROOT=~/Projects/Research/content
 LOCAL_LLM_BASE_URL=http://127.0.0.1:8080/v1
-LOCAL_LLM_MODEL=qwen3.8-27b-q8_0-mtp
+LOCAL_LLM_MODEL=qwen3.8-flash-next-ud-q4_k_xl-mtp
 ```
 
 The tracked examples and unit templates use absolute `/home/anthony/Research`

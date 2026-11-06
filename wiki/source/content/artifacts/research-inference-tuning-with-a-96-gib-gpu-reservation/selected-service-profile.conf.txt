@@ -1,0 +1,8 @@
+[Unit]
+Description=Research local Qwen3.8 Flash Next UD-Q4_K_XL inference (Vulkan, MTP)
+
+[Service]
+ExecStart=
+ExecStart=%h/.local/opt/llama.cpp/llama-b12144-vulkan/llama-b12144/llama-server -m %h/Models/Qwen3.8-Flash-Next-GGUF/UD-Q4_K_XL/Qwen3.8-Flash-Next-UD-Q4_K_XL-00001-of-00004.gguf --alias qwen3.8-flash-next-ud-q4_k_xl-mtp --host 127.0.0.1 --port 8080 -ngl 99 -c 32768 -np 1 --fit off -fa on -ctk q8_0 -ctv q8_0 --reasoning off --cache-ram 0 -ub 512 -t 4 --load-mode mmap --lazy-mode on --spec-type draft-mtp --spec-draft-n-max 2 --spec-draft-model %h/Models/Qwen3.8-Flash-Next-GGUF/MTP/mtp-Qwen3.8-Flash-Next-Q8_0.gguf --spec-draft-ngl 99
+MemoryMax=18G
+MemorySwapMax=0

@@ -1,0 +1,24 @@
+{
+  "kernel": "7.2.15-1-omarchy",
+  "cpu": "AMD RYZEN AI MAX+ 395 w/ Radeon 8060S",
+  "product": "GTR Pro",
+  "memtotal_kb": 32474256,
+  "vram_total_bytes": 103079215104,
+  "gtt_total_bytes": 16626819072,
+  "ttm_pages_limit": "4059282",
+  "research_revision": "5f85b519b9e378cc9999ad8a20fd9839f130846a",
+  "tools_revision": "a3c202dedd71a617526aae31f3749ef8f2e9741e",
+  "vulkan_build": "b12144 / 69ee2ecc0",
+  "original_build": "b12119 / 6f1e65437",
+  "measurement_started": "2026-11-05 America/Los_Angeles",
+  "measurement_ended": "2026-11-06T09:37:53.988193+00:00",
+  "rocm_packages": [
+    "hip-runtime-amd 7.2.4-1",
+    "hipblas 7.2.4-1",
+    "rocblas 7.2.4-3",
+    "rocminfo 7.2.4-1",
+    "mesa 1:26.2.5-1",
+    "vulkan-radeon 1:26.2.5-1"
+  ],
+  "wiki_validation_node": "v24.22.1"
+}
