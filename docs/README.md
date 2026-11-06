@@ -2,6 +2,8 @@
 
 Cross-repository documentation and agent guidance lives here so a workspace checkout has one discovery point.
 
+Project knowledge lives in the main [Agent Wiki](https://agent.wikip.co/research-system-overview/). Its [Research atlas](https://agent.wikip.co/research-architecture-and-statechart-atlas/) owns the current visual walkthrough, evidence, and decisions. There is no nested wiki in Research.
+
 Repository-boundary instructions for coding agents start in [`../AGENTS.md`](../AGENTS.md).
 
 - [`content-publishing-runbook.md`](content-publishing-runbook.md): end-to-end content, site build, and publish operations.

@@ -1,2 +1,0 @@
-{"case": "stale_worker_updates_stopped_job", "confirmed": true, "path": ["A leases", "lease expires", "B reclaims", "B records needs_review and clears owner", "A overwrites state with pr_open"], "production_database_touched": false}
-{"case": "final_attempt_crash_strands_expired_lease", "confirmed": true, "state": "leased", "attempt_count": 1, "max_attempts": 1, "production_database_touched": false}

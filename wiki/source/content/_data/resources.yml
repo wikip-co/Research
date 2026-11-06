@@ -1,7 +1,0 @@
-favicon: img/dark_folder.png
-repository_url: "https://github.com/wikip-co/Research"
-branch: main
-content_root: wiki/source/content
-new_post_directory: wiki/source/content/_posts
-new_post_filename: article-title.md
-new_post_template_file: content/_posts/template

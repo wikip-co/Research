@@ -173,8 +173,8 @@ before its model request. An overlapping run fails quickly as
 
 The August Toolbx configuration above is historical. After the owner increased
 the BIOS GPU reservation to 96 GiB, the Omarchy host was tested with Vulkan and
-ROCm. The measured comparisons and limitations are in the Research wiki article
-[Research Inference Tuning with a 96 GiB GPU Reservation](http://iconium:4010/research-inference-tuning-with-a-96-gib-gpu-reservation/).
+ROCm. The measured comparisons and limitations are in the central Agent Wiki article
+[Research Inference Tuning with a 96 GiB GPU Reservation](https://agent.wikip.co/research-inference-tuning-with-a-96-gib-gpu-reservation/).
 
 The selected `research-llm.service` runs Qwen3.8 Flash Next UD-Q4_K_XL on
 llama.cpp b12144 Vulkan, with its matching self-contained Q8 MTP head. It uses
