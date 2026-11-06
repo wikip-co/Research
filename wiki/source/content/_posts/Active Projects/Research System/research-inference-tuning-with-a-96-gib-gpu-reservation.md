@@ -99,6 +99,10 @@ A fixed sample uses 12 biology, 12 health, and 12 chemistry questions from [TIGE
 
 Q8 on Vulkan, Q8 on ROCm, converted FP16 on Vulkan, and original BF16 on ROCm each score **19/36** with direct JSON answers. Flash Next scores **26/36**, both with and without its MTP head. Full precision shows no score gain among the 27B variants in this sample. Equal totals do not prove equivalent general capability.
 
+A post-publication review on November 6 found two benchmark implementation gaps: Python value equality did not enforce scalar types, and the science parser lacked a fallback for final JSON returned only in `reasoning_content`. The fixes in [research-tools PR #6](https://github.com/wikip-co/research-tools/pull/6) enforce exact requested field types and accept structured JSON from that fallback only when normal content is empty. They do not relax the production validator.
+
+An offline audit checked all 132 retained extraction records, including the 108 final comparison records, and found no type mismatches. All 216 completed direct science answers were nonempty and error-free, so the fallback does not change their recorded scores. The two-request thinking pilot remains excluded; its retained summaries are insufficient to recover an empty answer. The original model selection and reported direct scores are unchanged. The evidence bundle includes the audit counts, without questions, prompts, or reasoning.
+
 This is a small diagnostic sample using a direct-answer protocol. It is not an official MMLU-Pro score or a general model ranking. The dataset's official report distinguishes direct answers from chain-of-thought results. A separate uncapped-thinking pilot was stopped after two completed requests to keep the experiment focused on the latency goal. Its partial results are not a benchmark verdict.
 
 ## Loading and precision findings
@@ -140,7 +144,7 @@ Experiments and raw synthetic results are retained locally under `~/Work/inferen
 
 ## Validation and delivery
 
-The publisher tooling suite passes all 100 tests after the prompt change. Both benchmark scripts pass their syntax and static checks. The wiki uses Node 24.22.1. Its lint reports zero errors and zero warnings. All five wiki tests pass. Clean/build and link/export verification pass for six articles and eighteen HTML pages. The workspace shell, manifest, and flat-layout checks also pass.
+The publisher tooling suite passes all 100 tests after the prompt change. After the benchmark review fixes, the full `make test` suite passes 141 tests, including four new benchmark regression tests. Both benchmark scripts pass their syntax and static checks. The wiki uses Node 24.22.1. Its lint reports zero errors and zero warnings. All five wiki tests pass. Clean/build and link/export verification pass for six articles and eighteen HTML pages. The workspace shell, manifest, and flat-layout checks also pass.
 
 The selected service answers health and model-list requests, with zero automatic restarts during the final check. The original unit remains unchanged beneath the new profile drop-in. The environment file keeps mode 0600. No intake, publisher, or triage service was enabled by this work.
 
@@ -156,6 +160,8 @@ These files contain measurements and identifiers, without full prompts, model re
 - {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/science-sample-manifest.json "Science sample provenance and question IDs" %} and {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/science-results.json "Per-question scores" %}.
 - {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/f16-integrity.json "FP16 conversion integrity check" %}.
 - {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/selected-service-profile.conf.txt "Sanitized service profile" %}, {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/selected-runtime.json "Verified selected runtime" %}, and {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/method-provenance.json "Code provenance and delivery boundary" %}.
+
+- {% site_link artifacts/research-inference-tuning-with-a-96-gib-gpu-reservation/review-scoring-audit-2026-11-06.json "Post-publication scoring audit" %}
 
 ## Related records
 
