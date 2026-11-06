@@ -18,6 +18,10 @@ tags:
 
 This is a runtime restoration and diagnostic milestone, not approval of a redesign option or proof of editorial correctness. {% post_link "Research System Overview" %} owns project decisions and next steps. [Iconium Local Inference and Memory Diagnostics 2026-11-04](https://agent.wikip.co/iconium-local-inference-and-memory-diagnostics-2026-11-04/) owns the earlier small-model test; [AMD Strix Halo GPU Memory for llama.cpp: Fixed VRAM versus GTT](https://agent.wikip.co/amd-strix-halo-gpu-memory-for-llama-cpp-fixed-vram-versus-gtt/) owns memory tuning. BIOS VRAM remains 32 GiB; no kernel memory, BIOS, IOMMU or authentication-policy change was made.
 
+## Later inference measurements
+
+The 32 GiB reservation and b12119 service below describe the 2026-11-04 restoration. The owner later increased the BIOS reservation to 96 GiB. {% post_link "Research Inference Tuning with a 96 GiB GPU Reservation" %} records the 2026-11-06 capacity tests, stronger Flash Next model, full-precision comparisons, and selected service settings.
+
 ## Workspace and dependencies
 
 The coordinator was cloned over HTTPS to `~/Projects/Research`, then its supported helper cloned three independent repositories:
