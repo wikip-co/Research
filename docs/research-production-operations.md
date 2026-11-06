@@ -196,11 +196,11 @@ curl --fail http://127.0.0.1:8080/v1/models
 journalctl --user -u research-llm.service -n 50 --no-pager
 ```
 
-After stopping the model, start it again with
-`systemctl --user start research-llm.service`. Before testing another server on
+After stopping the model, use the bounded recovery check below to start it
+and wait for readiness. Before testing another server on
 port 8080, stop the active model unit. Run comparison requests on a spare
 loopback port and use the tooling repository's [synthetic benchmark
-procedure](../research-tools/docs/local-research-publisher.md#benchmark-the-local-model).
+procedure](https://github.com/wikip-co/research-tools/blob/main/docs/local-research-publisher.md#benchmark-the-local-model).
 Do not run large GPU models concurrently on this host.
 
 ### Temporary gaming stop
@@ -223,13 +223,24 @@ cause of the earlier Wine crash.
 After gaming, restore the selected model:
 
 ```bash
-systemctl --user start research-llm.service
-systemctl --user status research-llm.service --no-pager
-curl --fail http://127.0.0.1:8080/health
-curl --fail http://127.0.0.1:8080/v1/models
+systemctl --user start research-llm.service &&
+  curl --fail --silent --show-error --retry 60 --retry-delay 2 \
+    --retry-connrefused --retry-max-time 180 --connect-timeout 2 --max-time 5 \
+    http://127.0.0.1:8080/health &&
+  curl --fail --silent --show-error --max-time 5 http://127.0.0.1:8080/v1/models
 ```
 
-This recovery sequence was recorded without restarting the model during gaming.
+`Type=simple` startup returns before model loading finishes. The health request
+retries connection refusal and transient HTTP errors (including loading's 503),
+with a 180-second retry budget and a five-second limit per attempt. The model
+list runs only after a successful health response. On failure, inspect
+`journalctl --user -u research-llm.service -n 50 --no-pager` before retrying.
+
+After the owner finished gaming on November 6, the service was restarted at
+14:49 PST and became healthy about 49 seconds later. Its model alias and a
+synthetic completion were verified. It remains disabled for automatic login
+start; no intake, publisher, or triage service was started. The owner reported
+finishing the gaming session; the earlier crash cause remains unresolved.
 An empty `pgrep` result while stopped normally exits with status 1.
 
 ### Restore the earlier profile

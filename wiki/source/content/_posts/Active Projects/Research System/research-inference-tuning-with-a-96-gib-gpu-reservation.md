@@ -1,7 +1,7 @@
 ---
 title: Research Inference Tuning with a 96 GiB GPU Reservation
 description: Measured model capacity, precision, backends, and latency after the BIOS GPU-memory change on Iconium.
-status: Verified; model temporarily stopped
+status: Verified; model restored
 tags:
   - Hardware
   - Automation
@@ -23,7 +23,7 @@ The owner later requested a temporary stop to free resources for Halo Infinite. 
 
 GPU VRAM use fell from 88,203,419,648 to 1,405,648,896 bytes, releasing about 80.84 GiB. Total fixed VRAM remained 96 GiB. These total-device snapshots do not isolate each allocation or establish peak game usage.
 
-The model endpoint remains unavailable until an operator starts the service again. The service configuration, model files, and existing disabled startup policy were preserved. No restart or successful subsequent Halo session was tested.
+The model endpoint was unavailable during gaming. The service configuration, model files, and existing disabled startup policy were preserved. After the owner reported finishing gaming, the service was restarted at 14:49 PST on November 6 and reached readiness about 49 seconds later. Health, the expected model alias, and a synthetic completion passed. This verifies restoration, not the cause of the earlier Halo crash. No intake, publisher, or triage service was started.
 
 The [production operations guide](https://github.com/wikip-co/Research/blob/main/docs/research-production-operations.md#temporary-gaming-stop) owns the stop/start commands. The [personal Agent Wiki incident record](https://agent.wikip.co/freeing-iconium-gpu-memory-for-halo-infinite/) retains the crash evidence and memory measurements.
 
@@ -134,7 +134,7 @@ The pinned MTP README describes an older mainline limitation. The tested stock b
 
 ## Reproduction and evidence
 
-The owning tooling repository contains `scripts/benchmark-local-inference.py` and `scripts/benchmark-science-inference.py`. Its [local publisher guide](https://github.com/wikip-co/research-tools/blob/main/docs/local-research-publisher.md) owns the operational procedure. New script and guide changes are local drafts until their source is published.
+The owning tooling repository contains `scripts/benchmark-local-inference.py` and `scripts/benchmark-science-inference.py`. Its [local publisher guide](https://github.com/wikip-co/research-tools/blob/main/docs/local-research-publisher.md) owns the operational procedure. The benchmark scripts, guide, and prompt clarification are tracked in [research-tools PR #5](https://github.com/wikip-co/research-tools/pull/5), independently of this wiki. The original measurements used the source fingerprints recorded in the evidence bundle.
 
 Experiments and raw synthetic results are retained locally under `~/Work/inference-benchmark-2026-11-05/`. The compact evidence bundle is linked below. Full prompts, model reasoning, production database rows, and mail records are excluded from this wiki.
 
@@ -144,7 +144,7 @@ The publisher tooling suite passes all 100 tests after the prompt change. Both b
 
 The selected service answers health and model-list requests, with zero automatic restarts during the final check. The original unit remains unchanged beneath the new profile drop-in. The environment file keeps mode 0600. No intake, publisher, or triage service was enabled by this work.
 
-At the initial handoff, source changes were uncommitted on `analysis/inference-96g-benchmarks-2026-11-06` in Research and `tools/local-inference-benchmarks-2026-11-06` in research-tools. This article and its evidence subsequently entered the wiki publication workflow. Use Git history for their source revision. Publishing the wiki does not publish the independent research-tools changes. No research content was published by these experiments.
+At the initial handoff, source changes were uncommitted on `analysis/inference-96g-benchmarks-2026-11-06` in Research and `tools/local-inference-benchmarks-2026-11-06` in research-tools. This article and its evidence were published through [Research PR #5](https://github.com/wikip-co/Research/pull/5). The tooling changes are published separately through [research-tools PR #5](https://github.com/wikip-co/research-tools/pull/5). Use each repository’s Git history for its delivered source revision; the evidence bundle retains the original measurement provenance. No research content was published by these experiments.
 
 ## Evidence bundle
 

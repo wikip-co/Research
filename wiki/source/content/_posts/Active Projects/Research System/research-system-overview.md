@@ -20,7 +20,7 @@ The project wiki is an ordinary tracked **`Research/wiki/` directory**, included
 
 The owner requested stronger models and a balanced latency target after increasing the BIOS GPU reservation to 96 GiB. {% post_link "Research Inference Tuning with a 96 GiB GPU Reservation" %} records the controlled tests, loading failures, source-accuracy checks, and chosen Flash Next Vulkan/MTP profile. The endpoint remains loopback-only. The publisher's deterministic validator remains in force.
 
-Later on November 6, the owner requested a temporary model shutdown for Halo Infinite. The unit reached `inactive/dead`, releasing about 80.84 GiB of GPU memory. The model remains selected but stopped until an operator restarts it. The tuning article records the evidence and recovery link.
+Later on November 6, the owner requested a temporary model shutdown for Halo Infinite. The unit reached `inactive/dead`, releasing about 80.84 GiB of GPU memory. After the owner finished gaming, the selected model was restarted at 14:49 PST and reached readiness about 49 seconds later. Health, model alias, and a synthetic completion passed. The tuning article records both interventions and the recovery link.
 
 ## Start a walkthrough
 
