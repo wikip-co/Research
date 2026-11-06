@@ -8,7 +8,7 @@ child repositories as submodules.
 
 Start with:
 
-- [Project knowledge wiki](wiki/README.md) — current system map, statecharts, findings, decisions and history; source is tracked here and the site runs locally on port 4010.
+- [Research knowledge in Agent Wiki](https://agent.wikip.co/research-system-overview/) — system map, statecharts, findings, decisions, and history. Source lives in [anthonyrussano/agent-wiki](https://github.com/anthonyrussano/agent-wiki/tree/main/source/content/_posts/Active%20Projects/Research%20System). Research does not contain a separate wiki.
 
 - [Production operations](docs/research-production-operations.md) — daily
   administration, ad-hoc URLs, passive queues, services, backups, local LLM,

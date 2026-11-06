@@ -1,3 +1,0 @@
-SPECIFICATION Spec
-CONSTANT Fenced = FALSE
-INVARIANT StoppedReviewCannotBeOverwrittenByStaleWorker

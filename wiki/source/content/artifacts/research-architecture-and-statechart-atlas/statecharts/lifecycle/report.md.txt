@@ -1,7 +1,0 @@
-# ResearchFlow
-
-TLC reached 14 states and 20 steps. The chart draws 14 states and 15 arrows.
-The view hides 5 steps, so the chart does not draw them.
-
-## Rules that hold
-PRRequiresGates, LiveRequiresHumanApproval, NoDeadlock

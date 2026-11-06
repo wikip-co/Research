@@ -25,37 +25,35 @@ This repository is a flat coordinator for several standalone repositories. Read 
 
 ## Project knowledge and visual review
 
-The project wiki at `wiki/` is the home for Research architecture, statecharts,
-findings, decisions and history. It is a normal tracked directory in this repo,
-not a submodule or independent repository. A Research clone contains the wiki.
+Research knowledge lives only in the main Agent Wiki at
+`~/Projects/agent-wiki`, served at [agent.wikip.co](https://agent.wikip.co/).
+Do not recreate a nested wiki in this repository. Research owns workspace
+coordination and operational docs; Agent Wiki owns architecture, findings,
+decisions, evidence, and history.
 
-Before project work, read `wiki/AGENTS.md`, then run:
+Before project work, read the main wiki's `AGENTS.md`, then run from its root:
 
 ```bash
-node wiki/source/bin/wiki.js search "TOPIC"
-node wiki/source/bin/wiki.js context "Research System"
+cd "$HOME/Projects/agent-wiki"
+node source/bin/wiki.js search "TOPIC"
+node source/bin/wiki.js context "Research System"
 ```
 
-Update owning articles when findings or decisions change. Keep operational
-procedures in their existing owning tooling repository and link them from the
-wiki instead of maintaining competing instructions. Preserve evidence dates,
-source code revisions and confirmed-versus-model-only labels. Never copy raw
-mail/database records, credentials or full model prompts into the wiki.
+Use [Research System Overview](https://agent.wikip.co/research-system-overview/)
+without a local checkout. Update owning articles when findings change. Keep
+operational procedures in their owning tooling repository and link to them.
+Preserve evidence dates, source revisions, and confirmed-versus-model-only labels.
+Never copy raw mail/database records, credentials, or full model prompts into the wiki.
 
-The LAN site is served on http://iconium:4010 (port 4010 is allowed from the local subnet). GitHub stores source/history only;
-no GitHub Pages or external wiki deployment is configured. Source lives under
-`wiki/source/content/_posts`, diagrams and model sources under the owning
-article's `wiki/source/content/artifacts/` directory. Do not edit `wiki/docs/`.
+Atlas specifications and artifacts live in Agent Wiki under
+`source/content/artifacts/research-architecture-and-statechart-atlas/`.
+Run its `scripts/render-research-atlas` and commit source models with SVG/PNG
+and reports there. The historical `docs/diagrams/render-diagrams` script in
+Research still owns its separate `docs/diagrams/specs/` outputs.
 
-For wiki atlas specifications, run `wiki/scripts/render-research-atlas` and commit
-its source models/specs with SVG/PNG and reports. The older
-`docs/diagrams/render-diagrams` remains the regeneration path for its historical
-`docs/diagrams/specs/` sources; do not mix the two output owners.
-
-After wiki changes, run its lint, tests, clean/build and link/export checks.
-The root Research Knowledge Wiki CI workflow validates the nested site. Future
-changes should use focused branches and PRs; pushing source is not publishing a
-new external website. Inspect all standalone workspace repo statuses separately.
+Validate wiki changes in Agent Wiki with its lint, tests, clean/build, and
+link/export checks. Use focused branches and PRs in each owning repository.
+Inspect all standalone workspace repository statuses separately.
 
 ## Cursor Cloud development
 
@@ -77,7 +75,7 @@ committing generated site output.
   preview exposure requires the intended task scope; preserve loopback defaults.
 - Build the public site using `wikip.co/scripts/build-site` and the publishing
   runbook. Generated `wikip.co/public` and `site/source/_posts` are ignored build
-  material. The project knowledge wiki at `wiki/` is a separate site.
+  material. Project knowledge lives in the separate Agent Wiki repository.
 
 The original PR's cloud screenshots and test counts are historical observations,
 not verification of today's host or a fresh cloud environment.

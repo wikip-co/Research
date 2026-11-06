@@ -1,5 +1,0 @@
-{
-  "flash_hip_trial": "Stopped after load stalled in svm_range_set_attr before readiness. No HIP Flash inference timings or quality scores are claimed.",
-  "q8_science_thinking": "Intentionally stopped after two completed answers to prioritize bounded-latency and backend work. Partial results are not a benchmark verdict.",
-  "flash_dio_trial": "Unit OOM at its 18 GiB host-memory limit. Successful retry used mmap plus explicit lazy-mode on; these two settings changed together."
-}

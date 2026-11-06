@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="900" height="250" viewBox="0 0 900 250" role="img" aria-labelledby="title desc">
-<title id="title">Shared knowledge flow</title>
-<desc id="desc">Markdown articles are reviewed and validated, then published as a browsable wiki and agent-readable exports.</desc>
-<rect width="900" height="250" rx="16" fill="#f4f7fb"/>
-<g fill="none" stroke="#53708d" stroke-width="3"><path d="M240 125H310M540 125H610"/><path d="m300 118 10 7-10 7m300-7 10 7-10 7"/></g>
-<g fill="#ffffff" stroke="#ccd7e3" stroke-width="2"><rect x="30" y="50" width="210" height="150" rx="12"/><rect x="310" y="50" width="230" height="150" rx="12"/><rect x="610" y="50" width="260" height="150" rx="12"/></g>
-<g font-family="system-ui, sans-serif" text-anchor="middle"><g fill="#17324f" font-size="23" font-weight="600"><text x="135" y="105">Write</text><text x="425" y="105">Validate</text><text x="740" y="105">Publish</text></g><g fill="#465c72" font-size="17"><text x="135" y="139">Markdown + evidence</text><text x="425" y="139">Review + lint + build</text><text x="740" y="139">Wiki + agent exports</text></g><g fill="#62768a" font-size="14"><text x="135" y="172">Organize in folders</text><text x="425" y="172">Check links and metadata</text><text x="740" y="172">Keep knowledge reusable</text></g></g>
-</svg>
